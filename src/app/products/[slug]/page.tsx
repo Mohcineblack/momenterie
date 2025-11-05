@@ -2,10 +2,12 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 import { ProductImageGallery } from '@/components/product/product-image-gallery';
 import { VariantSelector } from '@/components/product/variant-selector';
 import { ProductReviews } from '@/components/product/product-reviews';
 import { RelatedProducts } from '@/components/product/related-products';
+import { WriteReview } from '@/components/product/write-review';
 import { Breadcrumb } from '@/components/shared/breadcrumb';
 import { formatPrice } from '@/lib/utils';
 import { Star, Shield, Truck, ArrowRight } from 'lucide-react';
@@ -37,6 +39,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ProductPage({ params }: PageProps) {
+  const session = await auth();
+
   // Fetch product with all relations
   const product = await prisma.product.findUnique({
     where: { slug: params.slug },
@@ -78,6 +82,28 @@ export default async function ProductPage({ params }: PageProps) {
     reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : 0;
+
+  // Check if user has purchased this product
+  let hasPurchased = false;
+  let hasReviewed = false;
+  if (session?.user) {
+    hasPurchased = !!(await prisma.orderItem.findFirst({
+      where: {
+        productId: product.id,
+        order: {
+          userId: session.user.id,
+          paymentStatus: 'paid',
+        },
+      },
+    }));
+
+    hasReviewed = !!(await prisma.review.findFirst({
+      where: {
+        productId: product.id,
+        userId: session.user.id,
+      },
+    }));
+  }
 
   // Get related products
   const relatedProducts = await prisma.product.findMany({
@@ -215,6 +241,18 @@ export default async function ProductPage({ params }: PageProps) {
             )}
           </div>
         </div>
+
+        {/* Write Review Section */}
+        {session?.user && (
+          <div className="mt-20">
+            <WriteReview
+              productId={product.id}
+              productName={product.name}
+              hasPurchased={hasPurchased}
+              hasReviewed={hasReviewed}
+            />
+          </div>
+        )}
 
         {/* Reviews Section */}
         {reviews.length > 0 && (
