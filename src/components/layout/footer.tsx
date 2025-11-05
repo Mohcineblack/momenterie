@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Facebook, Instagram, Twitter, Mail } from 'lucide-react';
+import { NewsletterSignup } from '@/components/newsletter/newsletter-signup';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -53,19 +54,7 @@ export function Footer() {
           <p className="text-sm text-gray-600 mb-4">
             Subscribe to receive updates, exclusive offers, and more.
           </p>
-          <form className="flex gap-2">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
-            />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              Subscribe
-            </button>
-          </form>
+          <NewsletterSignup variant="compact" />
         </div>
 
         {/* Links Grid */}
