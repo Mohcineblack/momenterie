@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, Heart } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
+import { WishlistButton } from '@/components/wishlist/wishlist-button';
 import type { ProductWithRelations } from '@/types';
 
 interface ProductCardProps {
@@ -44,12 +45,16 @@ export function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Wishlist Button */}
-      <button
-        className="absolute top-3 right-3 z-10 p-2 bg-white/90 hover:bg-white rounded-full transition-colors shadow-sm"
-        aria-label="Add to wishlist"
-      >
-        <Heart className="w-5 h-5 text-gray-600 hover:text-red-500 transition-colors" />
-      </button>
+      <div className="absolute top-3 right-3 z-10">
+        <WishlistButton
+          productId={product.id}
+          productName={product.name}
+          productSlug={product.slug}
+          productImage={primaryImage}
+          productPrice={product.basePrice}
+          size="md"
+        />
+      </div>
 
       {/* Product Image */}
       <Link href={`/products/${product.slug}`} className="block relative aspect-square overflow-hidden bg-gray-100">
