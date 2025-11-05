@@ -1,4 +1,4 @@
-import * as astronomy from 'astronomy-engine';
+import * as astronomy from "astronomy-engine";
 
 export interface StarPosition {
   name: string;
@@ -15,24 +15,126 @@ export interface ConstellationLine {
 
 // Major bright stars with their coordinates (Right Ascension, Declination, Magnitude)
 const BRIGHT_STARS = [
-  { name: 'Sirius', ra: 6.7525, dec: -16.7161, mag: -1.46, constellation: 'Canis Major' },
-  { name: 'Canopus', ra: 6.3992, dec: -52.6958, mag: -0.72, constellation: 'Carina' },
-  { name: 'Arcturus', ra: 14.2612, dec: 19.1872, mag: -0.04, constellation: 'Boötes' },
-  { name: 'Vega', ra: 18.6156, dec: 38.7836, mag: 0.03, constellation: 'Lyra' },
-  { name: 'Capella', ra: 5.2781, dec: 45.9980, mag: 0.08, constellation: 'Auriga' },
-  { name: 'Rigel', ra: 5.2422, dec: -8.2017, mag: 0.13, constellation: 'Orion' },
-  { name: 'Procyon', ra: 7.6550, dec: 5.2247, mag: 0.38, constellation: 'Canis Minor' },
-  { name: 'Betelgeuse', ra: 5.9195, dec: 7.4069, mag: 0.50, constellation: 'Orion' },
-  { name: 'Altair', ra: 19.8464, dec: 8.8683, mag: 0.77, constellation: 'Aquila' },
-  { name: 'Aldebaran', ra: 4.5987, dec: 16.5093, mag: 0.85, constellation: 'Taurus' },
-  { name: 'Antares', ra: 16.4901, dec: -26.4320, mag: 0.96, constellation: 'Scorpius' },
-  { name: 'Spica', ra: 13.4199, dec: -11.1613, mag: 0.98, constellation: 'Virgo' },
-  { name: 'Pollux', ra: 7.7553, dec: 28.0262, mag: 1.14, constellation: 'Gemini' },
-  { name: 'Fomalhaut', ra: 22.9608, dec: -29.6222, mag: 1.16, constellation: 'Piscis Austrinus' },
-  { name: 'Deneb', ra: 20.6905, dec: 45.2803, mag: 1.25, constellation: 'Cygnus' },
-  { name: 'Regulus', ra: 10.1395, dec: 11.9672, mag: 1.35, constellation: 'Leo' },
-  { name: 'Castor', ra: 7.5767, dec: 31.8883, mag: 1.58, constellation: 'Gemini' },
-  { name: 'Bellatrix', ra: 5.4188, dec: 6.3497, mag: 1.64, constellation: 'Orion' },
+  {
+    name: "Sirius",
+    ra: 6.7525,
+    dec: -16.7161,
+    mag: -1.46,
+    constellation: "Canis Major",
+  },
+  {
+    name: "Canopus",
+    ra: 6.3992,
+    dec: -52.6958,
+    mag: -0.72,
+    constellation: "Carina",
+  },
+  {
+    name: "Arcturus",
+    ra: 14.2612,
+    dec: 19.1872,
+    mag: -0.04,
+    constellation: "Boötes",
+  },
+  { name: "Vega", ra: 18.6156, dec: 38.7836, mag: 0.03, constellation: "Lyra" },
+  {
+    name: "Capella",
+    ra: 5.2781,
+    dec: 45.998,
+    mag: 0.08,
+    constellation: "Auriga",
+  },
+  {
+    name: "Rigel",
+    ra: 5.2422,
+    dec: -8.2017,
+    mag: 0.13,
+    constellation: "Orion",
+  },
+  {
+    name: "Procyon",
+    ra: 7.655,
+    dec: 5.2247,
+    mag: 0.38,
+    constellation: "Canis Minor",
+  },
+  {
+    name: "Betelgeuse",
+    ra: 5.9195,
+    dec: 7.4069,
+    mag: 0.5,
+    constellation: "Orion",
+  },
+  {
+    name: "Altair",
+    ra: 19.8464,
+    dec: 8.8683,
+    mag: 0.77,
+    constellation: "Aquila",
+  },
+  {
+    name: "Aldebaran",
+    ra: 4.5987,
+    dec: 16.5093,
+    mag: 0.85,
+    constellation: "Taurus",
+  },
+  {
+    name: "Antares",
+    ra: 16.4901,
+    dec: -26.432,
+    mag: 0.96,
+    constellation: "Scorpius",
+  },
+  {
+    name: "Spica",
+    ra: 13.4199,
+    dec: -11.1613,
+    mag: 0.98,
+    constellation: "Virgo",
+  },
+  {
+    name: "Pollux",
+    ra: 7.7553,
+    dec: 28.0262,
+    mag: 1.14,
+    constellation: "Gemini",
+  },
+  {
+    name: "Fomalhaut",
+    ra: 22.9608,
+    dec: -29.6222,
+    mag: 1.16,
+    constellation: "Piscis Austrinus",
+  },
+  {
+    name: "Deneb",
+    ra: 20.6905,
+    dec: 45.2803,
+    mag: 1.25,
+    constellation: "Cygnus",
+  },
+  {
+    name: "Regulus",
+    ra: 10.1395,
+    dec: 11.9672,
+    mag: 1.35,
+    constellation: "Leo",
+  },
+  {
+    name: "Castor",
+    ra: 7.5767,
+    dec: 31.8883,
+    mag: 1.58,
+    constellation: "Gemini",
+  },
+  {
+    name: "Bellatrix",
+    ra: 5.4188,
+    dec: 6.3497,
+    mag: 1.64,
+    constellation: "Orion",
+  },
 ];
 
 /**
@@ -56,11 +158,13 @@ export function calculateStarPositions(
       const raDegrees = star.ra * 15;
 
       // Calculate horizontal coordinates (altitude and azimuth)
-      const equ = astronomy.Equator('JPLH', date, {
-        ofdate: true,
-      } as any);
-
-      const hor = astronomy.Horizon(time, observer, raDegrees, star.dec, astronomy.Refraction.Normal);
+      const hor = astronomy.Horizon(
+        time,
+        observer,
+        raDegrees,
+        star.dec,
+        "normal"
+      );
 
       // Only include stars above the horizon
       if (hor.altitude > 0) {
@@ -110,19 +214,17 @@ export function generateConstellationLines(
 
   // Define some basic constellation connections
   const connections: Record<string, string[][]> = {
-    'Orion': [
-      ['Betelgeuse', 'Bellatrix'],
-      ['Bellatrix', 'Rigel'],
+    Orion: [
+      ["Betelgeuse", "Bellatrix"],
+      ["Bellatrix", "Rigel"],
     ],
-    'Gemini': [
-      ['Castor', 'Pollux'],
-    ],
+    Gemini: [["Castor", "Pollux"]],
   };
 
   Object.entries(connections).forEach(([constellation, pairs]) => {
     pairs.forEach(([star1Name, star2Name]) => {
-      const star1 = stars.find(s => s.name === star1Name);
-      const star2 = stars.find(s => s.name === star2Name);
+      const star1 = stars.find((s) => s.name === star1Name);
+      const star2 = stars.find((s) => s.name === star2Name);
 
       if (star1 && star2) {
         lines.push({
@@ -149,14 +251,20 @@ export function calculatePlanetPositions(
   const observer = new astronomy.Observer(latitude, longitude, 0);
   const time = astronomy.MakeTime(date);
 
-  const planets = ['Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'];
+  const planets = ["Mercury", "Venus", "Mars", "Jupiter", "Saturn"];
   const positions: StarPosition[] = [];
 
   for (const planetName of planets) {
     try {
       const body = astronomy.Body[planetName as keyof typeof astronomy.Body];
       const equ = astronomy.Equator(body, time, observer, true, true);
-      const hor = astronomy.Horizon(time, observer, equ.ra * 15, equ.dec, astronomy.Refraction.Normal);
+      const hor = astronomy.Horizon(
+        time,
+        observer,
+        equ.ra * 15,
+        equ.dec,
+        "normal"
+      );
 
       if (hor.altitude > 0) {
         const azimuthRad = (hor.azimuth * Math.PI) / 180;
@@ -173,7 +281,7 @@ export function calculatePlanetPositions(
           x,
           y,
           magnitude: 5, // Planets are typically shown larger
-          constellation: 'Planet',
+          constellation: "Planet",
         });
       }
     } catch (error) {
@@ -188,8 +296,8 @@ export function calculatePlanetPositions(
  * Format coordinates for display
  */
 export function formatCoordinates(latitude: number, longitude: number): string {
-  const latDir = latitude >= 0 ? 'N' : 'S';
-  const lonDir = longitude >= 0 ? 'E' : 'W';
+  const latDir = latitude >= 0 ? "N" : "S";
+  const lonDir = longitude >= 0 ? "E" : "W";
 
   const latAbs = Math.abs(latitude);
   const lonAbs = Math.abs(longitude);
@@ -217,16 +325,16 @@ export function getMoonPhase(date: Date): {
   const moonPhase = astronomy.MoonPhase(time);
 
   let phaseName: string;
-  if (moonPhase < 45) phaseName = 'New Moon';
-  else if (moonPhase < 90) phaseName = 'Waxing Crescent';
-  else if (moonPhase < 135) phaseName = 'First Quarter';
-  else if (moonPhase < 180) phaseName = 'Waxing Gibbous';
-  else if (moonPhase < 225) phaseName = 'Full Moon';
-  else if (moonPhase < 270) phaseName = 'Waning Gibbous';
-  else if (moonPhase < 315) phaseName = 'Last Quarter';
-  else phaseName = 'Waning Crescent';
+  if (moonPhase < 45) phaseName = "New Moon";
+  else if (moonPhase < 90) phaseName = "Waxing Crescent";
+  else if (moonPhase < 135) phaseName = "First Quarter";
+  else if (moonPhase < 180) phaseName = "Waxing Gibbous";
+  else if (moonPhase < 225) phaseName = "Full Moon";
+  else if (moonPhase < 270) phaseName = "Waning Gibbous";
+  else if (moonPhase < 315) phaseName = "Last Quarter";
+  else phaseName = "Waning Crescent";
 
-  const illumination = (1 - Math.cos(moonPhase * Math.PI / 180)) / 2 * 100;
+  const illumination = ((1 - Math.cos((moonPhase * Math.PI) / 180)) / 2) * 100;
 
   return {
     phase: moonPhase,

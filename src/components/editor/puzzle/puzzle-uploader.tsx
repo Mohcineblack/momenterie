@@ -1,14 +1,19 @@
-'use client';
+"use client";
 
-import { useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { usePuzzleStore } from '@/store/puzzle-store';
-import { Upload, Image as ImageIcon } from 'lucide-react';
-import { toast } from 'sonner';
+import { useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+import { usePuzzleStore } from "@/store/puzzle-store";
+import { Upload, Image as ImageIcon } from "lucide-react";
+import { toast } from "sonner";
 
 export function PuzzleUploader() {
-  const { setImage, setIsUploading, setUploadProgress, isUploading, uploadProgress } =
-    usePuzzleStore();
+  const {
+    setImage,
+    setIsUploading,
+    setUploadProgress,
+    isUploading,
+    uploadProgress,
+  } = usePuzzleStore();
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -18,13 +23,13 @@ export function PuzzleUploader() {
 
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('Image is too large. Maximum size is 10MB.');
+        toast.error("Image is too large. Maximum size is 10MB.");
         return;
       }
 
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please upload a valid image file.');
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload a valid image file.");
         return;
       }
 
@@ -36,14 +41,15 @@ export function PuzzleUploader() {
         const previewUrl = URL.createObjectURL(file);
 
         // Simulate upload progress (in real app, this would come from UploadThing)
+        let progress = 0;
         const progressInterval = setInterval(() => {
-          setUploadProgress((prev) => {
-            if (prev >= 90) {
-              clearInterval(progressInterval);
-              return prev;
-            }
-            return prev + 10;
-          });
+          progress += 10;
+          if (progress >= 90) {
+            clearInterval(progressInterval);
+            setUploadProgress(90);
+          } else {
+            setUploadProgress(progress);
+          }
         }, 100);
 
         // In a real implementation, you would upload to UploadThing here:
@@ -59,10 +65,10 @@ export function PuzzleUploader() {
         // Set the image
         setImage(previewUrl, file);
 
-        toast.success('Image uploaded successfully!');
+        toast.success("Image uploaded successfully!");
       } catch (error) {
-        console.error('Upload error:', error);
-        toast.error('Failed to upload image. Please try again.');
+        console.error("Upload error:", error);
+        toast.error("Failed to upload image. Please try again.");
       } finally {
         setIsUploading(false);
         setUploadProgress(0);
@@ -74,7 +80,7 @@ export function PuzzleUploader() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpg', '.jpeg', '.png', '.webp', '.heic'],
+      "image/*": [".jpg", ".jpeg", ".png", ".webp", ".heic"],
     },
     maxFiles: 1,
     disabled: isUploading,
@@ -85,8 +91,8 @@ export function PuzzleUploader() {
       {...getRootProps()}
       className={`
         border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all
-        ${isDragActive ? 'border-gray-900 bg-gray-50' : 'border-gray-300 hover:border-gray-400'}
-        ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}
+        ${isDragActive ? "border-gray-900 bg-gray-50" : "border-gray-300 hover:border-gray-400"}
+        ${isUploading ? "opacity-50 cursor-not-allowed" : ""}
       `}
     >
       <input {...getInputProps()} />
@@ -113,7 +119,9 @@ export function PuzzleUploader() {
           </div>
 
           {isDragActive ? (
-            <p className="text-lg text-gray-700 font-medium">Drop your image here</p>
+            <p className="text-lg text-gray-700 font-medium">
+              Drop your image here
+            </p>
           ) : (
             <>
               <p className="text-lg text-gray-900 font-medium mb-2">
@@ -135,7 +143,9 @@ export function PuzzleUploader() {
 
       {/* Tips */}
       <div className="mt-8 pt-8 border-t border-gray-200 text-left">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Tips for best results:</h4>
+        <h4 className="text-sm font-medium text-gray-700 mb-3">
+          Tips for best results:
+        </h4>
         <ul className="text-xs text-gray-600 space-y-2">
           <li className="flex items-start gap-2">
             <span className="text-gray-400">•</span>

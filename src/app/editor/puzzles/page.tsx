@@ -1,20 +1,21 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { EditorHeader } from '@/components/editor/editor-header';
-import { PuzzleUploader } from '@/components/editor/puzzle/puzzle-uploader';
-import { PuzzleControls } from '@/components/editor/puzzle/puzzle-controls';
-import { PuzzlePreview } from '@/components/editor/puzzle/puzzle-preview';
-import { usePuzzleStore } from '@/store/puzzle-store';
-import { useCartStore } from '@/store/cart-store';
-import { toast } from 'sonner';
-import { Save, ShoppingCart } from 'lucide-react';
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { EditorHeader } from "@/components/editor/editor-header";
+import { PuzzleUploader } from "@/components/editor/puzzle/puzzle-uploader";
+import { PuzzleControls } from "@/components/editor/puzzle/puzzle-controls";
+import { PuzzlePreview } from "@/components/editor/puzzle/puzzle-preview";
+import { usePuzzleStore } from "@/store/puzzle-store";
+import { useCartStore } from "@/store/cart-store";
+import { toast } from "sonner";
+import { PuzzleCustomization } from "@/types";
+import { Save, ShoppingCart } from "lucide-react";
 
-export default function PuzzleEditorPage() {
+function PuzzleEditorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const productSlug = searchParams.get('product');
+  const productSlug = searchParams.get("product");
 
   const { addItem } = useCartStore();
   const { imageUrl, pieces, finish, resetEditor } = usePuzzleStore();
@@ -47,14 +48,14 @@ export default function PuzzleEditorPage() {
         }
       })
       .catch((error) => {
-        console.error('Failed to load product:', error);
-        toast.error('Failed to load product information');
+        console.error("Failed to load product:", error);
+        toast.error("Failed to load product information");
       });
   }, [productSlug]);
 
   // Load saved draft
   useEffect(() => {
-    const savedState = localStorage.getItem('puzzle-editor-draft');
+    const savedState = localStorage.getItem("puzzle-editor-draft");
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
@@ -63,10 +64,10 @@ export default function PuzzleEditorPage() {
           // Note: Can't restore File object from localStorage
           // User will need to re-upload if they refresh
           setPieces(parsed.pieces || 252);
-          setFinish(parsed.finish || 'glossy');
+          setFinish(parsed.finish || "glossy");
         }
       } catch (error) {
-        console.error('Failed to load saved state:', error);
+        console.error("Failed to load saved state:", error);
       }
     }
   }, []);
@@ -75,14 +76,17 @@ export default function PuzzleEditorPage() {
     setIsSaving(true);
     try {
       const state = usePuzzleStore.getState();
-      localStorage.setItem('puzzle-editor-draft', JSON.stringify({
-        imageUrl: state.imageUrl,
-        pieces: state.pieces,
-        finish: state.finish,
-      }));
-      toast.success('Draft saved successfully');
+      localStorage.setItem(
+        "puzzle-editor-draft",
+        JSON.stringify({
+          imageUrl: state.imageUrl,
+          pieces: state.pieces,
+          finish: state.finish,
+        })
+      );
+      toast.success("Draft saved successfully");
     } catch (error) {
-      toast.error('Failed to save draft');
+      toast.error("Failed to save draft");
     } finally {
       setIsSaving(false);
     }
@@ -90,41 +94,45 @@ export default function PuzzleEditorPage() {
 
   const handleAddToCart = async () => {
     if (!imageUrl) {
-      toast.error('Please upload an image for your puzzle');
+      toast.error("Please upload an image for your puzzle");
       return;
     }
 
     if (!product || !selectedVariant) {
-      toast.error('Product information is not loaded yet');
+      toast.error("Product information is not loaded yet");
       return;
     }
 
     try {
-      const customizationData = {
+      const customizationData: PuzzleCustomization = {
         imageUrl,
-        pieces,
-        finish,
+        pieceCount: pieces,
       };
 
       addItem({
-        id: `${product.id}-${selectedVariant.id}-${Date.now()}`,
         productId: product.id,
+        productName: product.name,
+        productSlug: product.slug,
         variantId: selectedVariant.id,
+        variantName: selectedVariant.name,
         quantity: 1,
+        basePrice: parseFloat(product.price),
+        variantPrice: parseFloat(selectedVariant.price),
         customizationData,
+        previewImageUrl: imageUrl,
       });
 
-      toast.success('Added to cart!');
+      toast.success("Added to cart!");
 
       // Clear draft and reset editor
-      localStorage.removeItem('puzzle-editor-draft');
+      localStorage.removeItem("puzzle-editor-draft");
       resetEditor();
 
       // Redirect to cart
-      router.push('/cart');
+      router.push("/cart");
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      toast.error('Failed to add to cart');
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add to cart");
     }
   };
 
@@ -216,5 +224,13 @@ export default function PuzzleEditorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PuzzleEditorPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PuzzleEditorPage />
+    </Suspense>
   );
 }

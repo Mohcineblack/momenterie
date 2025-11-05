@@ -1,20 +1,21 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { EditorHeader } from '@/components/editor/editor-header';
-import { PhotoPrintUploader } from '@/components/editor/photoprint/photoprint-uploader';
-import { PhotoPrintControls } from '@/components/editor/photoprint/photoprint-controls';
-import { PhotoPrintPreview } from '@/components/editor/photoprint/photoprint-preview';
-import { usePhotoPrintStore } from '@/store/photoprint-store';
-import { useCartStore } from '@/store/cart-store';
-import { toast } from 'sonner';
-import { Save, ShoppingCart } from 'lucide-react';
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { EditorHeader } from "@/components/editor/editor-header";
+import { PhotoPrintUploader } from "@/components/editor/photoprint/photoprint-uploader";
+import { PhotoPrintControls } from "@/components/editor/photoprint/photoprint-controls";
+import { PhotoPrintPreview } from "@/components/editor/photoprint/photoprint-preview";
+import { usePhotoPrintStore } from "@/store/photoprint-store";
+import { useCartStore } from "@/store/cart-store";
+import { toast } from "sonner";
+import { PhotoPrintCustomization } from "@/types";
+import { Save, ShoppingCart } from "lucide-react";
 
-export default function PhotoPrintEditorPage() {
+function PhotoPrintEditorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const productSlug = searchParams.get('product');
+  const productSlug = searchParams.get("product");
 
   const { addItem } = useCartStore();
   const { imageUrl, size, frame, resetEditor } = usePhotoPrintStore();
@@ -46,8 +47,8 @@ export default function PhotoPrintEditorPage() {
         }
       })
       .catch((error) => {
-        console.error('Failed to load product:', error);
-        toast.error('Failed to load product information');
+        console.error("Failed to load product:", error);
+        toast.error("Failed to load product information");
       });
   }, [productSlug]);
 
@@ -55,14 +56,17 @@ export default function PhotoPrintEditorPage() {
     setIsSaving(true);
     try {
       const state = usePhotoPrintStore.getState();
-      localStorage.setItem('photoprint-editor-draft', JSON.stringify({
-        imageUrl: state.imageUrl,
-        size: state.size,
-        frame: state.frame,
-      }));
-      toast.success('Draft saved successfully');
+      localStorage.setItem(
+        "photoprint-editor-draft",
+        JSON.stringify({
+          imageUrl: state.imageUrl,
+          size: state.size,
+          frame: state.frame,
+        })
+      );
+      toast.success("Draft saved successfully");
     } catch (error) {
-      toast.error('Failed to save draft');
+      toast.error("Failed to save draft");
     } finally {
       setIsSaving(false);
     }
@@ -70,41 +74,44 @@ export default function PhotoPrintEditorPage() {
 
   const handleAddToCart = async () => {
     if (!imageUrl) {
-      toast.error('Please upload a photo');
+      toast.error("Please upload a photo");
       return;
     }
 
     if (!product || !selectedVariant) {
-      toast.error('Product information is not loaded yet');
+      toast.error("Product information is not loaded yet");
       return;
     }
 
     try {
-      const customizationData = {
+      const customizationData: PhotoPrintCustomization = {
         imageUrl,
-        size,
-        frame,
       };
 
       addItem({
-        id: `${product.id}-${selectedVariant.id}-${Date.now()}`,
         productId: product.id,
+        productName: product.name,
+        productSlug: product.slug,
         variantId: selectedVariant.id,
+        variantName: selectedVariant.name,
         quantity: 1,
+        basePrice: parseFloat(product.price),
+        variantPrice: parseFloat(selectedVariant.price),
         customizationData,
+        previewImageUrl: imageUrl,
       });
 
-      toast.success('Added to cart!');
+      toast.success("Added to cart!");
 
       // Clear draft and reset editor
-      localStorage.removeItem('photoprint-editor-draft');
+      localStorage.removeItem("photoprint-editor-draft");
       resetEditor();
 
       // Redirect to cart
-      router.push('/cart');
+      router.push("/cart");
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      toast.error('Failed to add to cart');
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add to cart");
     }
   };
 
@@ -196,5 +203,13 @@ export default function PhotoPrintEditorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PhotoPrintEditorPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PhotoPrintEditorPage />
+    </Suspense>
   );
 }

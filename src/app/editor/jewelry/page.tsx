@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { EditorHeader } from '@/components/editor/editor-header';
-import { JewelryControls } from '@/components/editor/jewelry/jewelry-controls';
-import { JewelryPreview } from '@/components/editor/jewelry/jewelry-preview';
-import { useJewelryStore } from '@/store/jewelry-store';
-import { useCartStore } from '@/store/cart-store';
-import { toast } from 'sonner';
-import { Save, ShoppingCart } from 'lucide-react';
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { EditorHeader } from "@/components/editor/editor-header";
+import { JewelryControls } from "@/components/editor/jewelry/jewelry-controls";
+import { JewelryPreview } from "@/components/editor/jewelry/jewelry-preview";
+import { useJewelryStore } from "@/store/jewelry-store";
+import { useCartStore } from "@/store/cart-store";
+import { toast } from "sonner";
+import { JewelryCustomization } from "@/types";
 
-export default function JewelryEditorPage() {
+function JewelryEditorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const productSlug = searchParams.get('product');
+  const productSlug = searchParams.get("product");
 
   const { addItem } = useCartStore();
   const { location, date, resetEditor } = useJewelryStore();
@@ -45,14 +45,14 @@ export default function JewelryEditorPage() {
         }
       })
       .catch((error) => {
-        console.error('Failed to load product:', error);
-        toast.error('Failed to load product information');
+        console.error("Failed to load product:", error);
+        toast.error("Failed to load product information");
       });
   }, [productSlug]);
 
   // Load saved draft
   useEffect(() => {
-    const savedState = localStorage.getItem('jewelry-editor-draft');
+    const savedState = localStorage.getItem("jewelry-editor-draft");
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
@@ -60,7 +60,7 @@ export default function JewelryEditorPage() {
         if (parsed.location) store.setLocation(parsed.location);
         if (parsed.date) store.setDate(new Date(parsed.date));
       } catch (error) {
-        console.error('Failed to load saved state:', error);
+        console.error("Failed to load saved state:", error);
       }
     }
   }, []);
@@ -70,15 +70,15 @@ export default function JewelryEditorPage() {
     try {
       const state = useJewelryStore.getState();
       localStorage.setItem(
-        'jewelry-editor-draft',
+        "jewelry-editor-draft",
         JSON.stringify({
           location: state.location,
           date: state.date,
         })
       );
-      toast.success('Draft saved successfully');
+      toast.success("Draft saved successfully");
     } catch (error) {
-      toast.error('Failed to save draft');
+      toast.error("Failed to save draft");
     } finally {
       setIsSaving(false);
     }
@@ -86,34 +86,39 @@ export default function JewelryEditorPage() {
 
   const handleAddToCart = async () => {
     if (!location) {
-      toast.error('Please select a location');
+      toast.error("Please select a location");
       return;
     }
 
     if (!date) {
-      toast.error('Please select a date');
+      toast.error("Please select a date");
       return;
     }
 
     if (!product || !selectedVariant) {
-      toast.error('Please select a product variant');
+      toast.error("Please select a product variant");
       return;
     }
 
     try {
       const state = useJewelryStore.getState();
 
-      // Generate preview image (simplified for jewelry)
-      const previewData = {
-        location: state.location,
-        date: state.date?.toISOString(),
-        variant: selectedVariant.name,
-      };
+      // Extract material and chain length from variant name (e.g., "Gold - 16 inch")
+      const variantParts = selectedVariant.name.split(" - ");
+      const material = (variantParts[0]?.toLowerCase() || "silver") as
+        | "gold"
+        | "silver"
+        | "rose-gold";
+      const chainLength = variantParts[1] || "16 inch";
 
-      const customizationData = {
-        location: state.location,
-        date: state.date?.toISOString(),
-        variant: selectedVariant.name,
+      const customizationData: JewelryCustomization = {
+        date: state.date?.toISOString() || new Date().toISOString(),
+        location: {
+          lat: state.latitude || 0,
+          lng: state.longitude || 0,
+        },
+        material,
+        chainLength,
       };
 
       addItem({
@@ -123,30 +128,32 @@ export default function JewelryEditorPage() {
         variantId: selectedVariant.id,
         variantName: selectedVariant.name,
         quantity: 1,
-        price: product.basePrice + selectedVariant.priceModifier,
+        basePrice: parseFloat(product.price),
+        variantPrice: parseFloat(selectedVariant.price),
         customizationData,
-        previewImageUrl: '/images/products/necklace-1.jpg', // Use default image for now
+        previewImageUrl: "/images/products/necklace-1.jpg",
       });
 
-      toast.success('Added to cart!');
+      toast.success("Added to cart!");
 
       // Clear draft and reset editor
-      localStorage.removeItem('jewelry-editor-draft');
+      localStorage.removeItem("jewelry-editor-draft");
       resetEditor();
 
       // Redirect to cart after short delay
       setTimeout(() => {
-        router.push('/cart');
+        router.push("/cart");
       }, 1000);
     } catch (error) {
-      console.error('Failed to add to cart:', error);
-      toast.error('Failed to add to cart');
+      console.error("Failed to add to cart:", error);
+      toast.error("Failed to add to cart");
     }
   };
 
-  const finalPrice = product && selectedVariant
-    ? product.basePrice + selectedVariant.priceModifier
-    : 0;
+  const finalPrice =
+    product && selectedVariant
+      ? product.basePrice + selectedVariant.priceModifier
+      : 0;
 
   if (!mounted) {
     return null;
@@ -156,11 +163,9 @@ export default function JewelryEditorPage() {
     <div className="min-h-screen bg-gray-50">
       <EditorHeader
         title="Star Map Jewelry Designer"
-        productName={product?.name || 'Loading...'}
-        price={finalPrice}
-        onSaveDraft={handleSaveDraft}
-        isSaving={isSaving}
+        onSave={handleSaveDraft}
         onAddToCart={handleAddToCart}
+        isSaving={isSaving}
       />
 
       <div className="container mx-auto px-4 py-8">
@@ -181,5 +186,13 @@ export default function JewelryEditorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function JewelryEditorPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <JewelryEditorPage />
+    </Suspense>
   );
 }

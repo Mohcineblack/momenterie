@@ -16,29 +16,29 @@ async function getAccessToken(): Promise<string> {
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    throw new Error('Spotify credentials not configured');
+    throw new Error("Spotify credentials not configured");
   }
 
   try {
-    const response = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
       },
-      body: 'grant_type=client_credentials',
+      body: "grant_type=client_credentials",
     });
 
     if (!response.ok) {
-      throw new Error('Failed to get Spotify access token');
+      throw new Error("Failed to get Spotify access token");
     }
 
     const data = await response.json();
     accessToken = data.access_token;
     tokenExpiry = Date.now() + data.expires_in * 1000 - 60000; // Refresh 1 minute early
-    return accessToken;
+    return accessToken!;
   } catch (error) {
-    console.error('Error getting Spotify access token:', error);
+    console.error("Error getting Spotify access token:", error);
     throw error;
   }
 }
@@ -57,12 +57,12 @@ export async function searchTrack(query: string, limit: number = 10) {
     );
 
     if (!response.ok) {
-      throw new Error('Failed to search Spotify');
+      throw new Error("Failed to search Spotify");
     }
 
     return await response.json();
   } catch (error) {
-    console.error('Error searching Spotify:', error);
+    console.error("Error searching Spotify:", error);
     throw error;
   }
 }
@@ -73,17 +73,20 @@ export async function searchTrack(query: string, limit: number = 10) {
 export async function getTrack(trackId: string) {
   try {
     const token = await getAccessToken();
-    const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await fetch(
+      `https://api.spotify.com/v1/tracks/${trackId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     if (!response.ok) {
-      throw new Error('Failed to get track from Spotify');
+      throw new Error("Failed to get track from Spotify");
     }
 
     return await response.json();
   } catch (error) {
-    console.error('Error getting track from Spotify:', error);
+    console.error("Error getting track from Spotify:", error);
     throw error;
   }
 }
@@ -112,10 +115,10 @@ export function extractTrackId(input: string): string | null {
  */
 export function generateSpotifyCodeUrl(
   trackUri: string,
-  format: 'svg' | 'png' = 'svg',
+  format: "svg" | "png" = "svg",
   size: number = 640,
-  backgroundColor: string = 'ffffff',
-  barColor: string = '000000'
+  backgroundColor: string = "ffffff",
+  barColor: string = "000000"
 ): string {
   return `https://scannables.scdn.co/uri/plain/${format}/${backgroundColor}/${barColor}/${size}/${trackUri}`;
 }
@@ -139,9 +142,9 @@ export function formatTrackData(track: any): FormattedTrack {
   return {
     id: track.id,
     name: track.name,
-    artist: track.artists.map((a: any) => a.name).join(', '),
+    artist: track.artists.map((a: any) => a.name).join(", "),
     album: track.album.name,
-    albumArt: track.album.images[0]?.url || '',
+    albumArt: track.album.images[0]?.url || "",
     duration: track.duration_ms,
     previewUrl: track.preview_url,
     spotifyUrl: track.external_urls.spotify,

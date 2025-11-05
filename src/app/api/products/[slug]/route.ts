@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/products/[slug]
@@ -7,16 +7,16 @@ import { prisma } from '@/lib/prisma';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
 
     if (!slug) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Product slug is required',
+          error: "Product slug is required",
         },
         { status: 400 }
       );
@@ -28,10 +28,10 @@ export async function GET(
       include: {
         category: true,
         variants: {
-          orderBy: { priceModifier: 'asc' },
+          orderBy: { priceModifier: "asc" },
         },
         customizationFields: {
-          orderBy: { id: 'asc' },
+          orderBy: { id: "asc" },
         },
         reviews: {
           include: {
@@ -43,7 +43,7 @@ export async function GET(
               },
             },
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           take: 10,
         },
         _count: {
@@ -56,7 +56,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          error: 'Product not found',
+          error: "Product not found",
         },
         { status: 404 }
       );
@@ -98,12 +98,12 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error fetching product:', error);
+    console.error("Error fetching product:", error);
 
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch product',
+        error: "Failed to fetch product",
       },
       { status: 500 }
     );

@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   PaymentElement,
   useStripe,
   useElements,
-} from '@stripe/react-stripe-js';
-import { toast } from 'sonner';
-import { ArrowLeft, Loader2, Lock } from 'lucide-react';
-import { useCartStore } from '@/store/cart-store';
+} from "@stripe/react-stripe-js";
+import { toast } from "sonner";
+import { ArrowLeft, Loader2, Lock } from "lucide-react";
+import { useCartStore } from "@/store/cart-store";
 
 interface PaymentFormProps {
   clientSecret: string;
@@ -28,7 +28,7 @@ export function PaymentForm({
   const { clearCart } = useCartStore();
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,19 +38,19 @@ export function PaymentForm({
     }
 
     setIsProcessing(true);
-    setErrorMessage('');
+    setErrorMessage("");
 
     try {
       // Create the order in our database first
-      const orderResponse = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const orderResponse = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          shipping: checkoutData.shipping,
-          billing: checkoutData.billing,
+          shipping: checkoutData.shippingAddress,
+          billing: checkoutData.billingAddress,
           items: checkoutData.items,
           subtotal: checkoutData.subtotal,
-          shipping: checkoutData.shipping,
+          shippingCost: checkoutData.shippingCost,
           tax: checkoutData.tax,
           total: checkoutData.total,
         }),
@@ -59,7 +59,7 @@ export function PaymentForm({
       const orderResult = await orderResponse.json();
 
       if (!orderResult.success) {
-        throw new Error(orderResult.error || 'Failed to create order');
+        throw new Error(orderResult.error || "Failed to create order");
       }
 
       const orderId = orderResult.data.orderId;
@@ -70,22 +70,22 @@ export function PaymentForm({
         confirmParams: {
           return_url: `${window.location.origin}/orders/confirmation/${orderId}`,
         },
-        redirect: 'if_required',
+        redirect: "if_required",
       });
 
       if (error) {
-        setErrorMessage(error.message || 'Payment failed. Please try again.');
-        toast.error(error.message || 'Payment failed');
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        setErrorMessage(error.message || "Payment failed. Please try again.");
+        toast.error(error.message || "Payment failed");
+      } else if (paymentIntent && paymentIntent.status === "succeeded") {
         // Payment successful!
-        toast.success('Payment successful!');
+        toast.success("Payment successful!");
         clearCart();
         router.push(`/orders/confirmation/${orderId}`);
       }
     } catch (error: any) {
-      console.error('Payment error:', error);
-      setErrorMessage(error.message || 'An unexpected error occurred');
-      toast.error(error.message || 'Payment failed');
+      console.error("Payment error:", error);
+      setErrorMessage(error.message || "An unexpected error occurred");
+      toast.error(error.message || "Payment failed");
     } finally {
       setIsProcessing(false);
     }
@@ -139,7 +139,8 @@ export function PaymentForm({
             ) : (
               <>
                 <Lock className="w-5 h-5" />
-                Pay {checkoutData.total ? `€${checkoutData.total.toFixed(2)}` : ''}
+                Pay{" "}
+                {checkoutData.total ? `€${checkoutData.total.toFixed(2)}` : ""}
               </>
             )}
           </button>
@@ -147,11 +148,11 @@ export function PaymentForm({
 
         {/* Terms */}
         <p className="text-xs text-gray-500 text-center">
-          By placing this order, you agree to our{' '}
+          By placing this order, you agree to our{" "}
           <a href="/policies/terms-of-service" className="underline">
             Terms of Service
-          </a>{' '}
-          and{' '}
+          </a>{" "}
+          and{" "}
           <a href="/policies/privacy-policy" className="underline">
             Privacy Policy
           </a>

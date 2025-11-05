@@ -1,14 +1,19 @@
-'use client';
+"use client";
 
-import { useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { usePhotoPrintStore } from '@/store/photoprint-store';
-import { Upload, Image as ImageIcon } from 'lucide-react';
-import { toast } from 'sonner';
+import { useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+import { usePhotoPrintStore } from "@/store/photoprint-store";
+import { Upload, Image as ImageIcon } from "lucide-react";
+import { toast } from "sonner";
 
 export function PhotoPrintUploader() {
-  const { setImage, setIsUploading, setUploadProgress, isUploading, uploadProgress } =
-    usePhotoPrintStore();
+  const {
+    setImage,
+    setIsUploading,
+    setUploadProgress,
+    isUploading,
+    uploadProgress,
+  } = usePhotoPrintStore();
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -18,13 +23,13 @@ export function PhotoPrintUploader() {
 
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error('Image is too large. Maximum size is 10MB.');
+        toast.error("Image is too large. Maximum size is 10MB.");
         return;
       }
 
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please upload a valid image file.');
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload a valid image file.");
         return;
       }
 
@@ -36,14 +41,15 @@ export function PhotoPrintUploader() {
         const previewUrl = URL.createObjectURL(file);
 
         // Simulate upload progress
+        let progress = 0;
         const progressInterval = setInterval(() => {
-          setUploadProgress((prev) => {
-            if (prev >= 90) {
-              clearInterval(progressInterval);
-              return prev;
-            }
-            return prev + 10;
-          });
+          progress += 10;
+          if (progress >= 90) {
+            clearInterval(progressInterval);
+            setUploadProgress(90);
+          } else {
+            setUploadProgress(progress);
+          }
         }, 100);
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -53,10 +59,10 @@ export function PhotoPrintUploader() {
 
         setImage(previewUrl, file);
 
-        toast.success('Image uploaded successfully!');
+        toast.success("Image uploaded successfully!");
       } catch (error) {
-        console.error('Upload error:', error);
-        toast.error('Failed to upload image. Please try again.');
+        console.error("Upload error:", error);
+        toast.error("Failed to upload image. Please try again.");
       } finally {
         setIsUploading(false);
         setUploadProgress(0);
@@ -68,7 +74,7 @@ export function PhotoPrintUploader() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpg', '.jpeg', '.png', '.webp', '.heic'],
+      "image/*": [".jpg", ".jpeg", ".png", ".webp", ".heic"],
     },
     maxFiles: 1,
     disabled: isUploading,
@@ -79,8 +85,8 @@ export function PhotoPrintUploader() {
       {...getRootProps()}
       className={`
         border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-all
-        ${isDragActive ? 'border-gray-900 bg-gray-50' : 'border-gray-300 hover:border-gray-400'}
-        ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}
+        ${isDragActive ? "border-gray-900 bg-gray-50" : "border-gray-300 hover:border-gray-400"}
+        ${isUploading ? "opacity-50 cursor-not-allowed" : ""}
       `}
     >
       <input {...getInputProps()} />
@@ -107,7 +113,9 @@ export function PhotoPrintUploader() {
           </div>
 
           {isDragActive ? (
-            <p className="text-lg text-gray-700 font-medium">Drop your photo here</p>
+            <p className="text-lg text-gray-700 font-medium">
+              Drop your photo here
+            </p>
           ) : (
             <>
               <p className="text-lg text-gray-900 font-medium mb-2">

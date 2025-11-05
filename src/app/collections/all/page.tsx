@@ -1,11 +1,13 @@
-import { Metadata } from 'next';
-import { prisma } from '@/lib/prisma';
-import { ProductGrid } from '@/components/product/product-grid';
-import { ProductFilters } from '@/components/product/product-filters';
+import { Metadata } from "next";
+import { Suspense } from "react";
+import { prisma } from "@/lib/prisma";
+import { ProductGrid } from "@/components/product/product-grid";
+import { ProductFilters } from "@/components/product/product-filters";
 
 export const metadata: Metadata = {
-  title: 'All Products - Momenterie',
-  description: 'Browse all personalized gifts and custom products at Momenterie',
+  title: "All Products - Momenterie",
+  description:
+    "Browse all personalized gifts and custom products at Momenterie",
 };
 
 interface PageProps {
@@ -19,10 +21,14 @@ interface PageProps {
 }
 
 export default async function AllProductsPage({ searchParams }: PageProps) {
-  const page = parseInt(searchParams.page || '1', 10);
-  const sortBy = searchParams.sortBy || 'newest';
-  const minPrice = searchParams.minPrice ? parseFloat(searchParams.minPrice) : undefined;
-  const maxPrice = searchParams.maxPrice ? parseFloat(searchParams.maxPrice) : undefined;
+  const page = parseInt(searchParams.page || "1", 10);
+  const sortBy = searchParams.sortBy || "newest";
+  const minPrice = searchParams.minPrice
+    ? parseFloat(searchParams.minPrice)
+    : undefined;
+  const maxPrice = searchParams.maxPrice
+    ? parseFloat(searchParams.maxPrice)
+    : undefined;
   const search = searchParams.search;
 
   // Build where clause
@@ -30,8 +36,8 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
 
   if (search) {
     where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { description: { contains: search, mode: 'insensitive' } },
+      { name: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
     ];
   }
 
@@ -42,22 +48,22 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
   }
 
   // Build orderBy
-  let orderBy: any = { createdAt: 'desc' };
+  let orderBy: any = { createdAt: "desc" };
   switch (sortBy) {
-    case 'price-asc':
-      orderBy = { basePrice: 'asc' };
+    case "price-asc":
+      orderBy = { basePrice: "asc" };
       break;
-    case 'price-desc':
-      orderBy = { basePrice: 'desc' };
+    case "price-desc":
+      orderBy = { basePrice: "desc" };
       break;
-    case 'name-asc':
-      orderBy = { name: 'asc' };
+    case "name-asc":
+      orderBy = { name: "asc" };
       break;
-    case 'name-desc':
-      orderBy = { name: 'desc' };
+    case "name-desc":
+      orderBy = { name: "desc" };
       break;
-    case 'popular':
-      orderBy = { bestseller: 'desc' };
+    case "popular":
+      orderBy = { bestseller: "desc" };
       break;
   }
 
@@ -77,7 +83,7 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
     }),
     prisma.product.count({ where }),
     prisma.category.findMany({
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     }),
   ]);
 
@@ -111,10 +117,11 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
         <div className="container mx-auto px-4 py-12">
           <h1 className="text-4xl font-bold mb-2">All Products</h1>
           <p className="text-lg text-gray-600 max-w-3xl">
-            Browse our complete collection of personalized gifts and custom products
+            Browse our complete collection of personalized gifts and custom
+            products
           </p>
           <p className="mt-4 text-sm text-gray-600">
-            {totalCount} {totalCount === 1 ? 'product' : 'products'}
+            {totalCount} {totalCount === 1 ? "product" : "products"}
           </p>
         </div>
       </div>
@@ -123,9 +130,11 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
       <div className="container mx-auto px-4 py-8">
         <div className="flex gap-8">
           {/* Sidebar Filters */}
-          <aside className="hidden lg:block w-64 flex-shrink-0">
+          <aside className="hidden lg:block w-64 shrink-0">
             <div className="sticky top-24">
-              <ProductFilters categories={categories} />
+              <Suspense fallback={<div>Loading filters...</div>}>
+                <ProductFilters categories={categories} />
+              </Suspense>
             </div>
           </aside>
 
@@ -133,7 +142,9 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
           <div className="flex-1">
             {/* Mobile Filters */}
             <div className="lg:hidden mb-6">
-              <ProductFilters categories={categories} />
+              <Suspense fallback={<div>Loading filters...</div>}>
+                <ProductFilters categories={categories} />
+              </Suspense>
             </div>
 
             <ProductGrid products={productsWithRatings} />
@@ -143,7 +154,7 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
               <div className="mt-12 flex justify-center gap-2">
                 {page > 1 && (
                   <a
-                    href={`?page=${page - 1}${sortBy !== 'newest' ? `&sortBy=${sortBy}` : ''}`}
+                    href={`?page=${page - 1}${sortBy !== "newest" ? `&sortBy=${sortBy}` : ""}`}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Previous
@@ -162,11 +173,11 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
                     return (
                       <a
                         key={pageNum}
-                        href={`?page=${pageNum}${sortBy !== 'newest' ? `&sortBy=${sortBy}` : ''}`}
+                        href={`?page=${pageNum}${sortBy !== "newest" ? `&sortBy=${sortBy}` : ""}`}
                         className={`px-4 py-2 rounded-lg transition-colors ${
                           page === pageNum
-                            ? 'bg-gray-900 text-white'
-                            : 'border border-gray-300 hover:bg-gray-50'
+                            ? "bg-gray-900 text-white"
+                            : "border border-gray-300 hover:bg-gray-50"
                         }`}
                       >
                         {pageNum}
@@ -180,7 +191,7 @@ export default async function AllProductsPage({ searchParams }: PageProps) {
 
                 {page < totalPages && (
                   <a
-                    href={`?page=${page + 1}${sortBy !== 'newest' ? `&sortBy=${sortBy}` : ''}`}
+                    href={`?page=${page + 1}${sortBy !== "newest" ? `&sortBy=${sortBy}` : ""}`}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Next

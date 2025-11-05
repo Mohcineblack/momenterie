@@ -1,29 +1,32 @@
-import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
-import { ProductImageGallery } from '@/components/product/product-image-gallery';
-import { VariantSelector } from '@/components/product/variant-selector';
-import { ProductReviews } from '@/components/product/product-reviews';
-import { RelatedProducts } from '@/components/product/related-products';
-import { WriteReview } from '@/components/product/write-review';
-import { Breadcrumb } from '@/components/shared/breadcrumb';
-import { formatPrice } from '@/lib/utils';
-import { Star, Shield, Truck, ArrowRight } from 'lucide-react';
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { ProductImageGallery } from "@/components/product/product-image-gallery";
+import { VariantSelector } from "@/components/product/variant-selector";
+import { ProductReviews } from "@/components/product/product-reviews";
+import { RelatedProducts } from "@/components/product/related-products";
+import { WriteReview } from "@/components/product/write-review";
+import { Breadcrumb } from "@/components/shared/breadcrumb";
+import { formatPrice } from "@/lib/utils";
+import { Star, Shield, Truck, ArrowRight } from "lucide-react";
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { slug } = await params;
   const product = await prisma.product.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
   });
 
   if (!product) {
     return {
-      title: 'Product Not Found',
+      title: "Product Not Found",
     };
   }
 
@@ -40,17 +43,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ProductPage({ params }: PageProps) {
   const session = await auth();
+  const { slug } = await params;
 
   // Fetch product with all relations
   const product = await prisma.product.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     include: {
       category: true,
       variants: {
-        orderBy: { priceModifier: 'asc' },
+        orderBy: { priceModifier: "asc" },
       },
       customizationFields: {
-        orderBy: { id: 'asc' },
+        orderBy: { id: "asc" },
       },
       reviews: {
         include: {
@@ -62,7 +66,7 @@ export default async function ProductPage({ params }: PageProps) {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: 10,
       },
     },
@@ -92,7 +96,7 @@ export default async function ProductPage({ params }: PageProps) {
         productId: product.id,
         order: {
           userId: session.user.id,
-          paymentStatus: 'paid',
+          paymentStatus: "paid",
         },
       },
     }));
@@ -121,8 +125,11 @@ export default async function ProductPage({ params }: PageProps) {
   });
 
   const breadcrumbItems = [
-    { label: 'Home', href: '/' },
-    { label: product.category.name, href: `/collections/${product.category.slug}` },
+    { label: "Home", href: "/" },
+    {
+      label: product.category.name,
+      href: `/collections/${product.category.slug}`,
+    },
     { label: product.name, href: `/products/${product.slug}` },
   ];
 
@@ -138,7 +145,10 @@ export default async function ProductPage({ params }: PageProps) {
         <div className="grid md:grid-cols-2 gap-12">
           {/* Image Gallery */}
           <div>
-            <ProductImageGallery images={product.images} productName={product.name} />
+            <ProductImageGallery
+              images={product.images}
+              productName={product.name}
+            />
           </div>
 
           {/* Product Info */}
@@ -152,7 +162,9 @@ export default async function ProductPage({ params }: PageProps) {
             </Link>
 
             {/* Product Name */}
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">{product.name}</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              {product.name}
+            </h1>
 
             {/* Rating */}
             {reviews.length > 0 && (
@@ -163,8 +175,8 @@ export default async function ProductPage({ params }: PageProps) {
                       key={i}
                       className={`w-5 h-5 ${
                         i < Math.round(averageRating)
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
                       }`}
                     />
                   ))}
@@ -177,7 +189,9 @@ export default async function ProductPage({ params }: PageProps) {
 
             {/* Price */}
             <div className="mb-6">
-              <span className="text-sm text-gray-600 block mb-1">Starting at</span>
+              <span className="text-sm text-gray-600 block mb-1">
+                Starting at
+              </span>
               <span className="text-4xl font-bold text-gray-900">
                 {formatPrice(product.basePrice)}
               </span>
@@ -200,7 +214,7 @@ export default async function ProductPage({ params }: PageProps) {
 
             {/* CTA Button */}
             <Link
-              href={`/editor/${product.category.slug.replace('-', '')}?product=${product.slug}`}
+              href={`/editor/${product.category.slug.replace("-", "")}?product=${product.slug}`}
               className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium text-lg mb-8"
             >
               Start Customizing
@@ -231,7 +245,10 @@ export default async function ProductPage({ params }: PageProps) {
                 </h3>
                 <ul className="space-y-2">
                   {product.customizationFields.map((field) => (
-                    <li key={field.id} className="flex items-start gap-2 text-sm text-gray-700">
+                    <li
+                      key={field.id}
+                      className="flex items-start gap-2 text-sm text-gray-700"
+                    >
                       <span className="text-blue-600">✓</span>
                       <span>{field.label}</span>
                     </li>

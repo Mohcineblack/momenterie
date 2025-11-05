@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/response';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 
 const updateOrderSchema = z.object({
-  status: z.enum(['pending', 'processing', 'shipped', 'delivered', 'cancelled']).optional(),
+  status: z
+    .enum(["pending", "processing", "shipped", "delivered", "cancelled"])
+    .optional(),
   trackingNumber: z.string().nullable().optional(),
 });
 
@@ -16,9 +18,9 @@ export async function PATCH(
     const session = await auth();
 
     // Check if user is admin
-    if (!session?.user || session.user.role !== 'admin') {
+    if (!session?.user || session.user.role !== "admin") {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
+        { success: false, error: "Unauthorized" },
         { status: 401 }
       );
     }
@@ -36,7 +38,7 @@ export async function PATCH(
 
     if (!existingOrder) {
       return NextResponse.json(
-        { success: false, error: 'Order not found' },
+        { success: false, error: "Order not found" },
         { status: 404 }
       );
     }
@@ -64,17 +66,21 @@ export async function PATCH(
       data: updatedOrder,
     });
   } catch (error: any) {
-    console.error('Error updating order:', error);
+    console.error("Error updating order:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: error.errors },
+        {
+          success: false,
+          error: "Invalid request data",
+          details: error.errors,
+        },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { success: false, error: 'Failed to update order' },
+      { success: false, error: "Failed to update order" },
       { status: 500 }
     );
   }

@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { EditorHeader } from '@/components/editor/editor-header';
-import { DatePrintControls } from '@/components/editor/dateprint/dateprint-controls';
-import { DatePrintPreview } from '@/components/editor/dateprint/dateprint-preview';
-import { useDatePrintStore } from '@/store/dateprint-store';
-import { useCartStore } from '@/store/cart-store';
-import { toast } from 'sonner';
-import { Save, ShoppingCart } from 'lucide-react';
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { EditorHeader } from "@/components/editor/editor-header";
+import { DatePrintControls } from "@/components/editor/dateprint/dateprint-controls";
+import { DatePrintPreview } from "@/components/editor/dateprint/dateprint-preview";
+import { useDatePrintStore } from "@/store/dateprint-store";
+import { useCartStore } from "@/store/cart-store";
+import { toast } from "sonner";
+import { DatePrintCustomization } from "@/types";
 
-export default function DatePrintEditorPage() {
+function DatePrintEditorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const productSlug = searchParams.get('product');
+  const productSlug = searchParams.get("product");
 
   const { addItem } = useCartStore();
   const { date, title, subtitle, style, resetEditor } = useDatePrintStore();
@@ -45,14 +45,14 @@ export default function DatePrintEditorPage() {
         }
       })
       .catch((error) => {
-        console.error('Failed to load product:', error);
-        toast.error('Failed to load product information');
+        console.error("Failed to load product:", error);
+        toast.error("Failed to load product information");
       });
   }, [productSlug]);
 
   // Load saved draft
   useEffect(() => {
-    const savedState = localStorage.getItem('dateprint-editor-draft');
+    const savedState = localStorage.getItem("dateprint-editor-draft");
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
@@ -62,7 +62,7 @@ export default function DatePrintEditorPage() {
         if (parsed.subtitle) store.setSubtitle(parsed.subtitle);
         if (parsed.style) store.setStyle(parsed.style);
       } catch (error) {
-        console.error('Failed to load saved state:', error);
+        console.error("Failed to load saved state:", error);
       }
     }
   }, []);
@@ -72,7 +72,7 @@ export default function DatePrintEditorPage() {
     try {
       const state = useDatePrintStore.getState();
       localStorage.setItem(
-        'dateprint-editor-draft',
+        "dateprint-editor-draft",
         JSON.stringify({
           date: state.date,
           title: state.title,
@@ -80,9 +80,9 @@ export default function DatePrintEditorPage() {
           style: state.style,
         })
       );
-      toast.success('Draft saved successfully');
+      toast.success("Draft saved successfully");
     } catch (error) {
-      toast.error('Failed to save draft');
+      toast.error("Failed to save draft");
     } finally {
       setIsSaving(false);
     }
@@ -90,29 +90,30 @@ export default function DatePrintEditorPage() {
 
   const handleAddToCart = async () => {
     if (!date) {
-      toast.error('Please select a date');
+      toast.error("Please select a date");
       return;
     }
 
     if (!title) {
-      toast.error('Please enter a title');
+      toast.error("Please enter a title");
       return;
     }
 
     if (!product || !selectedVariant) {
-      toast.error('Please select a product variant');
+      toast.error("Please select a product variant");
       return;
     }
 
     try {
       const state = useDatePrintStore.getState();
 
-      const customizationData = {
-        date: state.date?.toISOString(),
-        title: state.title,
-        subtitle: state.subtitle,
-        style: state.style,
-        variant: selectedVariant.name,
+      const customizationData: DatePrintCustomization = {
+        date: state.date?.toISOString() || new Date().toISOString(),
+        eventName: state.title,
+        style: {
+          typography: state.style.fontFamily,
+          colorScheme: state.style.id,
+        },
       };
 
       addItem({
@@ -122,30 +123,32 @@ export default function DatePrintEditorPage() {
         variantId: selectedVariant.id,
         variantName: selectedVariant.name,
         quantity: 1,
-        price: product.basePrice + selectedVariant.priceModifier,
+        basePrice: parseFloat(product.price),
+        variantPrice: parseFloat(selectedVariant.price),
         customizationData,
-        previewImageUrl: '/images/products/date-print-preview.jpg',
+        previewImageUrl: "/images/products/date-print-preview.jpg",
       });
 
-      toast.success('Added to cart!');
+      toast.success("Added to cart!");
 
       // Clear draft and reset editor
-      localStorage.removeItem('dateprint-editor-draft');
+      localStorage.removeItem("dateprint-editor-draft");
       resetEditor();
 
       // Redirect to cart after short delay
       setTimeout(() => {
-        router.push('/cart');
+        router.push("/cart");
       }, 1000);
     } catch (error) {
-      console.error('Failed to add to cart:', error);
-      toast.error('Failed to add to cart');
+      console.error("Failed to add to cart:", error);
+      toast.error("Failed to add to cart");
     }
   };
 
-  const finalPrice = product && selectedVariant
-    ? product.basePrice + selectedVariant.priceModifier
-    : 0;
+  const finalPrice =
+    product && selectedVariant
+      ? product.basePrice + selectedVariant.priceModifier
+      : 0;
 
   if (!mounted) {
     return null;
@@ -155,11 +158,9 @@ export default function DatePrintEditorPage() {
     <div className="min-h-screen bg-gray-50">
       <EditorHeader
         title="Date Print Designer"
-        productName={product?.name || 'Loading...'}
-        price={finalPrice}
-        onSaveDraft={handleSaveDraft}
-        isSaving={isSaving}
+        onSave={handleSaveDraft}
         onAddToCart={handleAddToCart}
+        isSaving={isSaving}
       />
 
       <div className="container mx-auto px-4 py-8">
@@ -180,5 +181,13 @@ export default function DatePrintEditorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DatePrintEditorPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DatePrintEditorPage />
+    </Suspense>
   );
 }

@@ -1,24 +1,34 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { EditorHeader } from '@/components/editor/editor-header';
-import { StarMapControls } from '@/components/editor/starmap/starmap-controls';
-import { StarMapCanvas } from '@/components/editor/starmap/starmap-canvas';
-import { StarMapPreview } from '@/components/editor/starmap/starmap-preview';
-import { useStarMapStore } from '@/store/starmap-store';
-import { useCartStore } from '@/store/cart-store';
-import { toast } from 'sonner';
-import { Save, ShoppingCart } from 'lucide-react';
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { EditorHeader } from "@/components/editor/editor-header";
+import { StarMapControls } from "@/components/editor/starmap/starmap-controls";
+import { StarMapCanvas } from "@/components/editor/starmap/starmap-canvas";
+import { StarMapPreview } from "@/components/editor/starmap/starmap-preview";
+import { useStarMapStore } from "@/store/starmap-store";
+import { useCartStore } from "@/store/cart-store";
+import { toast } from "sonner";
+import { StarMapCustomization } from "@/types";
+import { Save, ShoppingCart } from "lucide-react";
 
-export default function StarMapEditorPage() {
+function StarMapEditorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const productSlug = searchParams.get('product');
+  const productSlug = searchParams.get("product");
 
   const { addItem } = useCartStore();
-  const { location, date, time, title, subtitle, style, showConstellations, showGrid, resetEditor } =
-    useStarMapStore();
+  const {
+    location,
+    date,
+    time,
+    title,
+    subtitle,
+    style,
+    showConstellations,
+    showGrid,
+    resetEditor,
+  } = useStarMapStore();
 
   const [mounted, setMounted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -47,14 +57,14 @@ export default function StarMapEditorPage() {
         }
       })
       .catch((error) => {
-        console.error('Failed to load product:', error);
-        toast.error('Failed to load product information');
+        console.error("Failed to load product:", error);
+        toast.error("Failed to load product information");
       });
   }, [productSlug]);
 
   // Load saved draft
   useEffect(() => {
-    const savedState = localStorage.getItem('starmap-editor-draft');
+    const savedState = localStorage.getItem("starmap-editor-draft");
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
@@ -65,7 +75,7 @@ export default function StarMapEditorPage() {
         if (parsed.title) store.setTitle(parsed.title);
         if (parsed.subtitle) store.setSubtitle(parsed.subtitle);
       } catch (error) {
-        console.error('Failed to load saved state:', error);
+        console.error("Failed to load saved state:", error);
       }
     }
   }, []);
@@ -74,19 +84,22 @@ export default function StarMapEditorPage() {
     setIsSaving(true);
     try {
       const state = useStarMapStore.getState();
-      localStorage.setItem('starmap-editor-draft', JSON.stringify({
-        location: state.location,
-        date: state.date,
-        time: state.time,
-        title: state.title,
-        subtitle: state.subtitle,
-        showConstellations: state.showConstellations,
-        showGrid: state.showGrid,
-        style: { id: state.style.id, name: state.style.name },
-      }));
-      toast.success('Draft saved successfully');
+      localStorage.setItem(
+        "starmap-editor-draft",
+        JSON.stringify({
+          location: state.location,
+          date: state.date,
+          time: state.time,
+          title: state.title,
+          subtitle: state.subtitle,
+          showConstellations: state.showConstellations,
+          showGrid: state.showGrid,
+          style: { id: state.style.id, name: state.style.name },
+        })
+      );
+      toast.success("Draft saved successfully");
     } catch (error) {
-      toast.error('Failed to save draft');
+      toast.error("Failed to save draft");
     } finally {
       setIsSaving(false);
     }
@@ -94,58 +107,62 @@ export default function StarMapEditorPage() {
 
   const handleAddToCart = async () => {
     if (!location) {
-      toast.error('Please select a location');
+      toast.error("Please select a location");
       return;
     }
 
     if (!title) {
-      toast.error('Please enter a title for your star map');
+      toast.error("Please enter a title for your star map");
       return;
     }
 
     if (!product || !selectedVariant) {
-      toast.error('Product information is not loaded yet');
+      toast.error("Product information is not loaded yet");
       return;
     }
 
     try {
-      const customizationData = {
+      const customizationData: StarMapCustomization = {
         location: {
+          address: location.placeName,
           lat: location.lat,
           lng: location.lng,
-          placeName: location.placeName,
         },
         date: date.toISOString(),
         time,
-        title,
-        subtitle,
-        showConstellations,
-        showGrid,
+        customText: {
+          title,
+          message: subtitle,
+        },
         style: {
-          id: style.id,
-          name: style.name,
+          colorTheme: style.id,
+          showConstellations,
         },
       };
 
       addItem({
-        id: `${product.id}-${selectedVariant.id}-${Date.now()}`,
         productId: product.id,
+        productName: product.name,
+        productSlug: product.slug,
         variantId: selectedVariant.id,
+        variantName: selectedVariant.name,
         quantity: 1,
+        basePrice: parseFloat(product.price),
+        variantPrice: parseFloat(selectedVariant.price),
         customizationData,
       });
 
-      toast.success('Added to cart!');
+      toast.success("Added to cart!");
 
       // Clear draft and reset editor
-      localStorage.removeItem('starmap-editor-draft');
+      localStorage.removeItem("starmap-editor-draft");
       resetEditor();
 
       // Redirect to cart
-      router.push('/cart');
+      router.push("/cart");
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      toast.error('Failed to add to cart');
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add to cart");
     }
   };
 
@@ -176,7 +193,9 @@ export default function StarMapEditorPage() {
           {/* Left Column - Controls */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
-              <h2 className="text-xl font-bold mb-4">Customize Your Star Map</h2>
+              <h2 className="text-xl font-bold mb-4">
+                Customize Your Star Map
+              </h2>
               <StarMapControls />
             </div>
           </div>
@@ -233,5 +252,13 @@ export default function StarMapEditorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function StarMapEditorPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <StarMapEditorPage />
+    </Suspense>
   );
 }

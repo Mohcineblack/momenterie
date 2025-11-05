@@ -1,24 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { CityMapEditor } from '@/components/editor/citymap/citymap-editor';
-import { CityMapPreview } from '@/components/editor/citymap/citymap-preview';
-import { EditorHeader } from '@/components/editor/editor-header';
-import { EditorControls } from '@/components/editor/citymap/editor-controls';
-import { useCityMapStore } from '@/store/citymap-store';
-import { ArrowLeft, Save, ShoppingCart } from 'lucide-react';
-import Link from 'next/link';
-import { toast } from 'sonner';
-import { useCartStore } from '@/store/cart-store';
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { CityMapEditor as CityMapEditorComponent } from "@/components/editor/citymap/citymap-editor";
+import { CityMapPreview } from "@/components/editor/citymap/citymap-preview";
+import { EditorHeader } from "@/components/editor/editor-header";
+import { EditorControls } from "@/components/editor/citymap/editor-controls";
+import { useCityMapStore } from "@/store/citymap-store";
+import { toast } from "sonner";
+import { useCartStore } from "@/store/cart-store";
+import { CityMapCustomization } from "@/types";
+import { Save, ShoppingCart } from "lucide-react";
 
-export default function CityMapEditorPage() {
+function CityMapEditorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const productSlug = searchParams.get('product');
+  const productSlug = searchParams.get("product");
 
   const { addItem } = useCartStore();
-  const { location, title, subtitle, date, mapStyle, resetEditor } = useCityMapStore();
+  const { location, title, subtitle, date, mapStyle, resetEditor } =
+    useCityMapStore();
 
   const [mounted, setMounted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -48,20 +49,20 @@ export default function CityMapEditorPage() {
         }
       })
       .catch((error) => {
-        console.error('Failed to load product:', error);
-        toast.error('Failed to load product information');
+        console.error("Failed to load product:", error);
+        toast.error("Failed to load product information");
       });
   }, [productSlug]);
 
   useEffect(() => {
     // Load saved state from localStorage if available
-    const savedState = localStorage.getItem('citymap-editor-draft');
+    const savedState = localStorage.getItem("citymap-editor-draft");
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
         // Restore state through store actions
       } catch (error) {
-        console.error('Failed to load saved state:', error);
+        console.error("Failed to load saved state:", error);
       }
     }
   }, []);
@@ -70,17 +71,20 @@ export default function CityMapEditorPage() {
     setIsSaving(true);
     try {
       const state = useCityMapStore.getState();
-      localStorage.setItem('citymap-editor-draft', JSON.stringify({
-        location: state.location,
-        title: state.title,
-        subtitle: state.subtitle,
-        date: state.date,
-        mapStyle: state.mapStyle,
-        zoom: state.zoom,
-      }));
-      toast.success('Draft saved successfully');
+      localStorage.setItem(
+        "citymap-editor-draft",
+        JSON.stringify({
+          location: state.location,
+          title: state.title,
+          subtitle: state.subtitle,
+          date: state.date,
+          mapStyle: state.mapStyle,
+          zoom: state.zoom,
+        })
+      );
+      toast.success("Draft saved successfully");
     } catch (error) {
-      toast.error('Failed to save draft');
+      toast.error("Failed to save draft");
     } finally {
       setIsSaving(false);
     }
@@ -88,56 +92,62 @@ export default function CityMapEditorPage() {
 
   const handleAddToCart = async () => {
     if (!location) {
-      toast.error('Please select a location on the map');
+      toast.error("Please select a location on the map");
       return;
     }
 
     if (!title) {
-      toast.error('Please enter a title for your map');
+      toast.error("Please enter a title for your map");
       return;
     }
 
     if (!product || !selectedVariant) {
-      toast.error('Product information is not loaded yet');
+      toast.error("Product information is not loaded yet");
       return;
     }
 
     try {
-      const customizationData = {
+      const customizationData: CityMapCustomization = {
         location: {
+          address: location.placeName,
           lat: location.lat,
           lng: location.lng,
-          placeName: location.placeName,
         },
-        title,
-        subtitle,
         date,
-        mapStyle: {
-          id: mapStyle.id,
-          name: mapStyle.name,
+        customText: {
+          title,
+          subtitle,
+          coordinates: true,
         },
-        zoom: useCityMapStore.getState().zoom,
+        style: {
+          mapStyle: mapStyle.id,
+          colorScheme: mapStyle.name,
+        },
       };
 
       addItem({
-        id: `${product.id}-${selectedVariant.id}-${Date.now()}`,
         productId: product.id,
+        productName: product.name,
+        productSlug: product.slug,
         variantId: selectedVariant.id,
+        variantName: selectedVariant.name,
         quantity: 1,
+        basePrice: parseFloat(product.price),
+        variantPrice: parseFloat(selectedVariant.price),
         customizationData,
       });
 
-      toast.success('Added to cart!');
+      toast.success("Added to cart!");
 
       // Clear draft and reset editor
-      localStorage.removeItem('citymap-editor-draft');
+      localStorage.removeItem("citymap-editor-draft");
       resetEditor();
 
       // Redirect to cart
-      router.push('/cart');
+      router.push("/cart");
     } catch (error) {
-      console.error('Error adding to cart:', error);
-      toast.error('Failed to add to cart');
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add to cart");
     }
   };
 
@@ -180,11 +190,12 @@ export default function CityMapEditorPage() {
               <div className="p-4 border-b">
                 <h3 className="font-semibold">Map Position</h3>
                 <p className="text-sm text-gray-600">
-                  Search for a location and adjust the map to your preferred view
+                  Search for a location and adjust the map to your preferred
+                  view
                 </p>
               </div>
-              <div className="relative" style={{ height: '500px' }}>
-                <CityMapEditor />
+              <div className="relative" style={{ height: "500px" }}>
+                <CityMapEditorComponent />
               </div>
             </div>
 
@@ -225,5 +236,13 @@ export default function CityMapEditorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CityMapEditorPageWrapper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CityMapEditorPage />
+    </Suspense>
   );
 }

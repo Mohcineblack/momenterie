@@ -1,27 +1,30 @@
-import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
-import { ProductGrid } from '@/components/product/product-grid';
-import { ProductFilters } from '@/components/product/product-filters';
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { ProductGrid } from "@/components/product/product-grid";
+import { ProductFilters } from "@/components/product/product-filters";
 
 interface PageProps {
-  params: { category: string };
-  searchParams: {
+  params: Promise<{ category: string }>;
+  searchParams: Promise<{
     page?: string;
     sortBy?: string;
     minPrice?: string;
     maxPrice?: string;
-  };
+  }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { category: categorySlug } = await params;
   const category = await prisma.category.findUnique({
-    where: { slug: params.category },
+    where: { slug: categorySlug },
   });
 
   if (!category) {
     return {
-      title: 'Category Not Found',
+      title: "Category Not Found",
     };
   }
 
@@ -31,10 +34,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function CollectionPage({ params, searchParams }: PageProps) {
+export default async function CollectionPage({
+  params,
+  searchParams,
+}: PageProps) {
+  // Await params and searchParams
+  const { category: categorySlug } = await params;
+  const search = await searchParams;
+
   // Fetch category
   const category = await prisma.category.findUnique({
-    where: { slug: params.category },
+    where: { slug: categorySlug },
   });
 
   if (!category) {
@@ -42,10 +52,10 @@ export default async function CollectionPage({ params, searchParams }: PageProps
   }
 
   // Build query parameters
-  const page = parseInt(searchParams.page || '1', 10);
-  const sortBy = searchParams.sortBy || 'newest';
-  const minPrice = searchParams.minPrice ? parseFloat(searchParams.minPrice) : undefined;
-  const maxPrice = searchParams.maxPrice ? parseFloat(searchParams.maxPrice) : undefined;
+  const page = parseInt(search.page || "1", 10);
+  const sortBy = search.sortBy || "newest";
+  const minPrice = search.minPrice ? parseFloat(search.minPrice) : undefined;
+  const maxPrice = search.maxPrice ? parseFloat(search.maxPrice) : undefined;
 
   // Build where clause
   const where: any = {
@@ -59,22 +69,22 @@ export default async function CollectionPage({ params, searchParams }: PageProps
   }
 
   // Build orderBy
-  let orderBy: any = { createdAt: 'desc' };
+  let orderBy: any = { createdAt: "desc" };
   switch (sortBy) {
-    case 'price-asc':
-      orderBy = { basePrice: 'asc' };
+    case "price-asc":
+      orderBy = { basePrice: "asc" };
       break;
-    case 'price-desc':
-      orderBy = { basePrice: 'desc' };
+    case "price-desc":
+      orderBy = { basePrice: "desc" };
       break;
-    case 'name-asc':
-      orderBy = { name: 'asc' };
+    case "name-asc":
+      orderBy = { name: "asc" };
       break;
-    case 'name-desc':
-      orderBy = { name: 'desc' };
+    case "name-desc":
+      orderBy = { name: "desc" };
       break;
-    case 'popular':
-      orderBy = { bestseller: 'desc' };
+    case "popular":
+      orderBy = { bestseller: "desc" };
       break;
   }
 
@@ -94,7 +104,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
     }),
     prisma.product.count({ where }),
     prisma.category.findMany({
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     }),
   ]);
 
@@ -128,10 +138,12 @@ export default async function CollectionPage({ params, searchParams }: PageProps
         <div className="container mx-auto px-4 py-12">
           <h1 className="text-4xl font-bold mb-2">{category.name}</h1>
           {category.description && (
-            <p className="text-lg text-gray-600 max-w-3xl">{category.description}</p>
+            <p className="text-lg text-gray-600 max-w-3xl">
+              {category.description}
+            </p>
           )}
           <p className="mt-4 text-sm text-gray-600">
-            {totalCount} {totalCount === 1 ? 'product' : 'products'}
+            {totalCount} {totalCount === 1 ? "product" : "products"}
           </p>
         </div>
       </div>
@@ -160,7 +172,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
               <div className="mt-12 flex justify-center gap-2">
                 {page > 1 && (
                   <a
-                    href={`?page=${page - 1}${sortBy !== 'newest' ? `&sortBy=${sortBy}` : ''}`}
+                    href={`?page=${page - 1}${sortBy !== "newest" ? `&sortBy=${sortBy}` : ""}`}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Previous
@@ -180,11 +192,11 @@ export default async function CollectionPage({ params, searchParams }: PageProps
                     return (
                       <a
                         key={pageNum}
-                        href={`?page=${pageNum}${sortBy !== 'newest' ? `&sortBy=${sortBy}` : ''}`}
+                        href={`?page=${pageNum}${sortBy !== "newest" ? `&sortBy=${sortBy}` : ""}`}
                         className={`px-4 py-2 rounded-lg transition-colors ${
                           page === pageNum
-                            ? 'bg-gray-900 text-white'
-                            : 'border border-gray-300 hover:bg-gray-50'
+                            ? "bg-gray-900 text-white"
+                            : "border border-gray-300 hover:bg-gray-50"
                         }`}
                       >
                         {pageNum}
@@ -198,7 +210,7 @@ export default async function CollectionPage({ params, searchParams }: PageProps
 
                 {page < totalPages && (
                   <a
-                    href={`?page=${page + 1}${sortBy !== 'newest' ? `&sortBy=${sortBy}` : ''}`}
+                    href={`?page=${page + 1}${sortBy !== "newest" ? `&sortBy=${sortBy}` : ""}`}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Next

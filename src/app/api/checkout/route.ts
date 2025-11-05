@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
-import { generateOrderNumber } from '@/lib/utils';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { generateOrderNumber } from "@/lib/utils";
+import { z } from "zod";
 
 const checkoutSchema = z.object({
   shipping: z.object({
@@ -46,7 +46,7 @@ const checkoutSchema = z.object({
     })
   ),
   subtotal: z.number(),
-  shipping: z.number(),
+  shippingCost: z.number(),
   tax: z.number(),
   total: z.number(),
 });
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         data: {
           email: shippingData.email,
           name: `${shippingData.firstName} ${shippingData.lastName}`,
-          role: 'customer',
+          role: "customer",
         },
       });
       userId = guestUser.id;
@@ -136,14 +136,14 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         orderNumber,
-        status: 'pending',
+        status: "pending",
         subtotal: validatedData.subtotal,
-        shippingCost: validatedData.shipping,
+        shippingCost: validatedData.shippingCost,
         tax: validatedData.tax,
         total: validatedData.total,
         shippingAddressId: shippingAddress.id,
         billingAddressId: billingAddress.id,
-        paymentStatus: 'unpaid',
+        paymentStatus: "unpaid",
         items: {
           create: validatedData.items.map((item) => ({
             productId: item.productId,
@@ -166,16 +166,16 @@ export async function POST(request: NextRequest) {
         orderId: order.id,
         orderNumber: order.orderNumber,
       },
-      message: 'Order created successfully',
+      message: "Order created successfully",
     });
   } catch (error) {
-    console.error('Checkout error:', error);
+    console.error("Checkout error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Invalid request data',
+          error: "Invalid request data",
           details: error.errors,
         },
         { status: 400 }
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to process checkout',
+        error: "Failed to process checkout",
       },
       { status: 500 }
     );

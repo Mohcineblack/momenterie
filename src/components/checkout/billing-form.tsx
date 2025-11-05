@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
-import { ShippingFormData } from './shipping-form';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
+import { ShippingFormData } from "./shipping-form";
 
 const billingSchema = z.object({
   sameAsShipping: z.boolean(),
@@ -27,7 +27,7 @@ interface BillingFormProps {
   onComplete: (data: BillingFormData) => void;
   onBack: () => void;
   initialData?: Partial<BillingFormData>;
-  shippingAddress?: ShippingFormData;
+  shippingAddress?: Omit<ShippingFormData, "email">;
   isLoading?: boolean;
 }
 
@@ -51,7 +51,7 @@ export function BillingForm({
     resolver: zodResolver(billingSchema),
     defaultValues: initialData || {
       sameAsShipping: true,
-      country: 'DE',
+      country: "DE",
     },
   });
 
@@ -78,7 +78,7 @@ export function BillingForm({
           <label className="flex items-start gap-3 cursor-pointer">
             <input
               type="checkbox"
-              {...register('sameAsShipping')}
+              {...register("sameAsShipping")}
               checked={sameAsShipping}
               onChange={(e) => setSameAsShipping(e.target.checked)}
               className="mt-1 w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
@@ -89,9 +89,12 @@ export function BillingForm({
               </span>
               {shippingAddress && sameAsShipping && (
                 <p className="text-sm text-gray-600 mt-1">
-                  {shippingAddress.firstName} {shippingAddress.lastName}<br />
-                  {shippingAddress.street}<br />
-                  {shippingAddress.city}, {shippingAddress.postalCode}<br />
+                  {shippingAddress.firstName} {shippingAddress.lastName}
+                  <br />
+                  {shippingAddress.street}
+                  <br />
+                  {shippingAddress.city}, {shippingAddress.postalCode}
+                  <br />
                   {shippingAddress.country}
                 </p>
               )}
@@ -105,49 +108,62 @@ export function BillingForm({
             {/* Name */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   First name *
                 </label>
                 <input
-                  {...register('firstName')}
+                  {...register("firstName")}
                   id="firstName"
                   type="text"
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent ${
-                    errors.firstName ? 'border-red-500' : 'border-gray-300'
+                    errors.firstName ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="John"
                 />
                 {errors.firstName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.firstName.message}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Last name *
                 </label>
                 <input
-                  {...register('lastName')}
+                  {...register("lastName")}
                   id="lastName"
                   type="text"
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent ${
-                    errors.lastName ? 'border-red-500' : 'border-gray-300'
+                    errors.lastName ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="Doe"
                 />
                 {errors.lastName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.lastName.message}
+                  </p>
                 )}
               </div>
             </div>
 
             {/* Company */}
             <div>
-              <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="company"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Company (optional)
               </label>
               <input
-                {...register('company')}
+                {...register("company")}
                 id="company"
                 type="text"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
@@ -157,29 +173,37 @@ export function BillingForm({
 
             {/* Address */}
             <div>
-              <label htmlFor="street" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="street"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Street address *
               </label>
               <input
-                {...register('street')}
+                {...register("street")}
                 id="street"
                 type="text"
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent ${
-                  errors.street ? 'border-red-500' : 'border-gray-300'
+                  errors.street ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="123 Main St"
               />
               {errors.street && (
-                <p className="mt-1 text-sm text-red-600">{errors.street.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.street.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="street2" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="street2"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Apartment, suite, etc. (optional)
               </label>
               <input
-                {...register('street2')}
+                {...register("street2")}
                 id="street2"
                 type="text"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
@@ -190,38 +214,48 @@ export function BillingForm({
             {/* City, Postal */}
             <div className="grid grid-cols-3 gap-4">
               <div className="col-span-2">
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="city"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   City *
                 </label>
                 <input
-                  {...register('city')}
+                  {...register("city")}
                   id="city"
                   type="text"
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent ${
-                    errors.city ? 'border-red-500' : 'border-gray-300'
+                    errors.city ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="Berlin"
                 />
                 {errors.city && (
-                  <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.city.message}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="postalCode"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Postal code *
                 </label>
                 <input
-                  {...register('postalCode')}
+                  {...register("postalCode")}
                   id="postalCode"
                   type="text"
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent ${
-                    errors.postalCode ? 'border-red-500' : 'border-gray-300'
+                    errors.postalCode ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="10115"
                 />
                 {errors.postalCode && (
-                  <p className="mt-1 text-sm text-red-600">{errors.postalCode.message}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.postalCode.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -229,11 +263,14 @@ export function BillingForm({
             {/* State & Country */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="state"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   State / Region (optional)
                 </label>
                 <input
-                  {...register('state')}
+                  {...register("state")}
                   id="state"
                   type="text"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
@@ -242,14 +279,17 @@ export function BillingForm({
               </div>
 
               <div>
-                <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="country"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Country *
                 </label>
                 <select
-                  {...register('country')}
+                  {...register("country")}
                   id="country"
                   className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent ${
-                    errors.country ? 'border-red-500' : 'border-gray-300'
+                    errors.country ? "border-red-500" : "border-gray-300"
                   }`}
                 >
                   <option value="DE">Germany</option>
@@ -264,7 +304,9 @@ export function BillingForm({
                   <option value="US">United States</option>
                 </select>
                 {errors.country && (
-                  <p className="mt-1 text-sm text-red-600">{errors.country.message}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.country.message}
+                  </p>
                 )}
               </div>
             </div>

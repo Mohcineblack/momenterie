@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useCartStore } from '@/store/cart-store';
-import { ShippingForm } from '@/components/checkout/shipping-form';
-import { BillingForm } from '@/components/checkout/billing-form';
-import { PaymentForm } from '@/components/checkout/payment-form';
-import { OrderSummary } from '@/components/checkout/order-summary';
-import { CheckoutSteps } from '@/components/checkout/checkout-steps';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-import { CheckoutFormData } from '@/types';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useCartStore } from "@/store/cart-store";
+import { ShippingForm } from "@/components/checkout/shipping-form";
+import { BillingForm } from "@/components/checkout/billing-form";
+import { PaymentForm } from "@/components/checkout/payment-form";
+import { OrderSummary } from "@/components/checkout/order-summary";
+import { CheckoutSteps } from "@/components/checkout/checkout-steps";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import { CheckoutFormData } from "@/types";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
 
@@ -22,7 +22,7 @@ export default function CheckoutPage() {
   const [mounted, setMounted] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<Partial<CheckoutFormData>>({});
-  const [clientSecret, setClientSecret] = useState<string>('');
+  const [clientSecret, setClientSecret] = useState<string>("");
   const [isCreatingIntent, setIsCreatingIntent] = useState(false);
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     // Redirect if cart is empty
     if (mounted && items.length === 0) {
-      router.push('/cart');
+      router.push("/cart");
     }
   }, [mounted, items, router]);
 
@@ -41,20 +41,20 @@ export default function CheckoutPage() {
   const tax = subtotal * 0.19;
   const total = subtotal + shipping + tax;
 
-  const handleShippingComplete = async (data: CheckoutFormData['shipping']) => {
+  const handleShippingComplete = async (data: CheckoutFormData["shipping"]) => {
     setFormData((prev) => ({ ...prev, shipping: data }));
     setCurrentStep(2);
   };
 
-  const handleBillingComplete = async (data: CheckoutFormData['billing']) => {
+  const handleBillingComplete = async (data: CheckoutFormData["billing"]) => {
     setFormData((prev) => ({ ...prev, billing: data }));
 
     // Create payment intent
     setIsCreatingIntent(true);
     try {
-      const response = await fetch('/api/create-payment-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: total,
           items: items.map((item) => ({
@@ -72,11 +72,11 @@ export default function CheckoutPage() {
         setClientSecret(result.data.clientSecret);
         setCurrentStep(3);
       } else {
-        alert('Failed to initialize payment. Please try again.');
+        alert("Failed to initialize payment. Please try again.");
       }
     } catch (error) {
-      console.error('Error creating payment intent:', error);
-      alert('Failed to initialize payment. Please try again.');
+      console.error("Error creating payment intent:", error);
+      alert("Failed to initialize payment. Please try again.");
     } finally {
       setIsCreatingIntent(false);
     }
@@ -91,9 +91,9 @@ export default function CheckoutPage() {
   }
 
   const steps = [
-    { number: 1, title: 'Shipping', description: 'Delivery address' },
-    { number: 2, title: 'Billing', description: 'Payment address' },
-    { number: 3, title: 'Payment', description: 'Complete order' },
+    { number: 1, title: "Shipping", description: "Delivery address" },
+    { number: 2, title: "Billing", description: "Payment address" },
+    { number: 3, title: "Payment", description: "Complete order" },
   ];
 
   return (
@@ -142,9 +142,9 @@ export default function CheckoutPage() {
                 options={{
                   clientSecret,
                   appearance: {
-                    theme: 'stripe',
+                    theme: "stripe",
                     variables: {
-                      colorPrimary: '#1a1a1a',
+                      colorPrimary: "#1a1a1a",
                     },
                   },
                 }}
@@ -153,10 +153,11 @@ export default function CheckoutPage() {
                   clientSecret={clientSecret}
                   onBack={() => setCurrentStep(2)}
                   checkoutData={{
-                    ...formData,
+                    shippingAddress: formData.shipping,
+                    billingAddress: formData.billing,
                     items,
                     subtotal,
-                    shipping,
+                    shippingCost: shipping,
                     tax,
                     total,
                   }}
@@ -191,7 +192,10 @@ function CheckoutSkeleton() {
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <div className="space-y-4">
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-12 bg-gray-200 rounded animate-pulse" />
+                  <div
+                    key={i}
+                    className="h-12 bg-gray-200 rounded animate-pulse"
+                  />
                 ))}
               </div>
             </div>
@@ -200,7 +204,10 @@ function CheckoutSkeleton() {
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-6 bg-gray-200 rounded animate-pulse" />
+                  <div
+                    key={i}
+                    className="h-6 bg-gray-200 rounded animate-pulse"
+                  />
                 ))}
               </div>
             </div>

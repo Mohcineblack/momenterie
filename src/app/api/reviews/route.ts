@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/response';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 
 const createReviewSchema = z.object({
   productId: z.number(),
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: 'You must be logged in to submit a review' },
+        { success: false, error: "You must be logged in to submit a review" },
         { status: 401 }
       );
     }
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     if (!product) {
       return NextResponse.json(
-        { success: false, error: 'Product not found' },
+        { success: false, error: "Product not found" },
         { status: 404 }
       );
     }
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         productId: validatedData.productId,
         order: {
           userId: session.user.id,
-          paymentStatus: 'paid',
+          paymentStatus: "paid",
         },
       },
     });
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'You can only review products you have purchased',
+          error: "You can only review products you have purchased",
         },
         { status: 403 }
       );
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'You have already reviewed this product',
+          error: "You have already reviewed this product",
         },
         { status: 400 }
       );
@@ -100,17 +100,21 @@ export async function POST(request: NextRequest) {
       data: review,
     });
   } catch (error: any) {
-    console.error('Error creating review:', error);
+    console.error("Error creating review:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Invalid request data', details: error.errors },
+        {
+          success: false,
+          error: "Invalid request data",
+          details: error.errors,
+        },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { success: false, error: 'Failed to create review' },
+      { success: false, error: "Failed to create review" },
       { status: 500 }
     );
   }

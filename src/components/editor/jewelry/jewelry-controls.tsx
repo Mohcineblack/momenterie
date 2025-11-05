@@ -1,12 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useJewelryStore } from '@/store/jewelry-store';
-import { Calendar as CalendarIcon, MapPin } from 'lucide-react';
-import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { LocationSearch } from '@/components/editor/location-search';
+import { useState } from "react";
+import { useJewelryStore } from "@/store/jewelry-store";
+import { Calendar as CalendarIcon, MapPin } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { LocationSearch } from "@/components/editor/location-search";
 
 interface JewelryControlsProps {
   product: any;
@@ -19,7 +23,8 @@ export function JewelryControls({
   selectedVariant,
   onVariantChange,
 }: JewelryControlsProps) {
-  const { location, date, setLocation, setDate, setCoordinates } = useJewelryStore();
+  const { location, date, setLocation, setDate, setCoordinates } =
+    useJewelryStore();
   const [isLocationOpen, setIsLocationOpen] = useState(false);
 
   const handleLocationSelect = (place: any) => {
@@ -42,7 +47,7 @@ export function JewelryControls({
         <Popover>
           <PopoverTrigger asChild>
             <button className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left hover:border-gray-400 transition-colors">
-              {date ? format(date, 'PPP') : 'Select a date'}
+              {date ? format(date, "PPP") : "Select a date"}
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -68,11 +73,11 @@ export function JewelryControls({
         <Popover open={isLocationOpen} onOpenChange={setIsLocationOpen}>
           <PopoverTrigger asChild>
             <button className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left hover:border-gray-400 transition-colors">
-              {location || 'Search for a location...'}
+              {location || "Search for a location..."}
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-[400px] p-0" align="start">
-            <LocationSearch onSelect={handleLocationSelect} />
+            <LocationSearch onLocationSelect={handleLocationSelect} />
           </PopoverContent>
         </Popover>
       </div>
@@ -92,8 +97,8 @@ export function JewelryControls({
                   onClick={() => onVariantChange(variant)}
                   className={`w-full px-4 py-3 rounded-lg border-2 text-left transition-all ${
                     isSelected
-                      ? 'border-gray-900 bg-gray-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? "border-gray-900 bg-gray-50"
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -107,8 +112,8 @@ export function JewelryControls({
                       <div className="font-semibold">€{price.toFixed(2)}</div>
                       {variant.priceModifier !== 0 && (
                         <div className="text-xs text-gray-500">
-                          {variant.priceModifier > 0 ? '+' : ''}
-                          €{variant.priceModifier.toFixed(2)}
+                          {variant.priceModifier > 0 ? "+" : ""}€
+                          {variant.priceModifier.toFixed(2)}
                         </div>
                       )}
                     </div>
@@ -122,11 +127,13 @@ export function JewelryControls({
 
       {/* Info Card */}
       <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
-        <h4 className="font-semibold text-blue-900 mb-2">About Star Map Jewelry</h4>
+        <h4 className="font-semibold text-blue-900 mb-2">
+          About Star Map Jewelry
+        </h4>
         <p className="text-sm text-blue-800">
-          Each piece features the exact constellation pattern from your chosen date and
-          location, beautifully engraved on a high-quality pendant. A unique and
-          meaningful gift to treasure forever.
+          Each piece features the exact constellation pattern from your chosen
+          date and location, beautifully engraved on a high-quality pendant. A
+          unique and meaningful gift to treasure forever.
         </p>
       </div>
     </div>
