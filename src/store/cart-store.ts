@@ -45,7 +45,10 @@ export const useCartStore = create<CartStore>()(
       isOpen: false,
 
       addItem: (item) => {
-        const id = `${item.productId}-${item.variantId || 'default'}-${Date.now()}`;
+        const id =
+          typeof crypto !== 'undefined' && 'randomUUID' in crypto
+            ? crypto.randomUUID()
+            : `${item.productId}-${item.variantId || 'default'}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
         set((state) => ({
           items: [...state.items, { ...item, id }],
           isOpen: true, // Auto-open cart when item added

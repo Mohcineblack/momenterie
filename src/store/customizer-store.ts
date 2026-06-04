@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { CustomizationData } from '@/types';
+
+type CustomizationDraft = Record<string, unknown>;
 
 interface CustomizerStore {
   // Current product being customized
@@ -13,7 +14,7 @@ interface CustomizerStore {
   variantPrice: number;
 
   // Customization data
-  customizationData: Partial<CustomizationData>;
+  customizationData: CustomizationDraft;
 
   // Preview state
   previewImageUrl: string | null;
@@ -26,7 +27,7 @@ interface CustomizerStore {
   // Actions
   setProduct: (productId: number, productSlug: string, productName: string, basePrice: number) => void;
   setVariant: (variantId: number | null, variantPrice: number) => void;
-  updateCustomization: (data: Partial<CustomizationData>) => void;
+  updateCustomization: (data: CustomizationDraft) => void;
   setPreviewImage: (url: string) => void;
   setGeneratingPreview: (isGenerating: boolean) => void;
   setValidationErrors: (errors: Record<string, string>) => void;

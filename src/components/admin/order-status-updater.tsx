@@ -14,11 +14,12 @@ interface OrderStatusUpdaterProps {
 }
 
 const ORDER_STATUSES = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'processing', label: 'Processing' },
-  { value: 'shipped', label: 'Shipped' },
-  { value: 'delivered', label: 'Delivered' },
-  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'PROCESSING', label: 'Processing' },
+  { value: 'IN_PRODUCTION', label: 'In production' },
+  { value: 'SHIPPED', label: 'Shipped' },
+  { value: 'DELIVERED', label: 'Delivered' },
+  { value: 'CANCELLED', label: 'Cancelled' },
 ];
 
 export function OrderStatusUpdater({ order }: OrderStatusUpdaterProps) {

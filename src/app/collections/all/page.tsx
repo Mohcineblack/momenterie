@@ -11,33 +11,34 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     sortBy?: string;
     minPrice?: string;
     maxPrice?: string;
     search?: string;
-  };
+  }>;
 }
 
 export default async function AllProductsPage({ searchParams }: PageProps) {
-  const page = parseInt(searchParams.page || "1", 10);
-  const sortBy = searchParams.sortBy || "newest";
-  const minPrice = searchParams.minPrice
-    ? parseFloat(searchParams.minPrice)
+  const search = await searchParams;
+  const page = parseInt(search.page || "1", 10);
+  const sortBy = search.sortBy || "newest";
+  const minPrice = search.minPrice
+    ? parseFloat(search.minPrice)
     : undefined;
-  const maxPrice = searchParams.maxPrice
-    ? parseFloat(searchParams.maxPrice)
+  const maxPrice = search.maxPrice
+    ? parseFloat(search.maxPrice)
     : undefined;
-  const search = searchParams.search;
+  const query = search.search;
 
   // Build where clause
   const where: any = {};
 
-  if (search) {
+  if (query) {
     where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
+      { name: { contains: query, mode: "insensitive" } },
+      { description: { contains: query, mode: "insensitive" } },
     ];
   }
 

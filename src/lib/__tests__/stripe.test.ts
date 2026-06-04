@@ -1,5 +1,4 @@
-import { createPaymentIntent, formatPrice, calculateOrderTotal } from '../stripe'
-import Stripe from 'stripe'
+import { createPaymentIntent, formatPrice, calculateOrderTotal, stripe } from '../stripe'
 
 // Mock Stripe
 jest.mock('stripe', () => {
@@ -21,11 +20,10 @@ describe('Stripe Utilities', () => {
         currency: 'eur',
       })
 
-      const stripe = new Stripe('sk_test_123', { apiVersion: '2024-12-18.acacia' })
       stripe.paymentIntents.create = mockCreate
 
       const result = await createPaymentIntent({
-        amount: 34.99,
+        amount: 3499,
         currency: 'eur',
         metadata: { orderId: 'order-123' },
       })
@@ -47,11 +45,10 @@ describe('Stripe Utilities', () => {
         currency: 'usd',
       })
 
-      const stripe = new Stripe('sk_test_123', { apiVersion: '2024-12-18.acacia' })
       stripe.paymentIntents.create = mockCreate
 
       await createPaymentIntent({
-        amount: 29.99,
+        amount: 2999,
         currency: 'usd',
       })
 
@@ -68,7 +65,6 @@ describe('Stripe Utilities', () => {
         metadata: { orderId: 'order-456', userId: 'user-123' },
       })
 
-      const stripe = new Stripe('sk_test_123', { apiVersion: '2024-12-18.acacia' })
       stripe.paymentIntents.create = mockCreate
 
       await createPaymentIntent({
@@ -95,12 +91,11 @@ describe('Stripe Utilities', () => {
         new Error('Payment intent creation failed')
       )
 
-      const stripe = new Stripe('sk_test_123', { apiVersion: '2024-12-18.acacia' })
       stripe.paymentIntents.create = mockCreate
 
       await expect(
         createPaymentIntent({
-          amount: 34.99,
+          amount: 3499,
           currency: 'eur',
         })
       ).rejects.toThrow('Payment intent creation failed')
@@ -109,23 +104,23 @@ describe('Stripe Utilities', () => {
 
   describe('formatPrice', () => {
     it('formats price in EUR with 2 decimals', () => {
-      expect(formatPrice(29.99, 'EUR')).toBe('€29.99')
-      expect(formatPrice(100, 'EUR')).toBe('€100.00')
-      expect(formatPrice(0.5, 'EUR')).toBe('€0.50')
+      expect(formatPrice(2999, 'EUR')).toBe('€29.99')
+      expect(formatPrice(10000, 'EUR')).toBe('€100.00')
+      expect(formatPrice(50, 'EUR')).toBe('€0.50')
     })
 
     it('formats price in USD with 2 decimals', () => {
-      expect(formatPrice(29.99, 'USD')).toBe('$29.99')
-      expect(formatPrice(100, 'USD')).toBe('$100.00')
+      expect(formatPrice(2999, 'USD')).toBe('$29.99')
+      expect(formatPrice(10000, 'USD')).toBe('$100.00')
     })
 
     it('formats price in GBP with 2 decimals', () => {
-      expect(formatPrice(29.99, 'GBP')).toBe('£29.99')
+      expect(formatPrice(2999, 'GBP')).toBe('£29.99')
     })
 
     it('handles large amounts', () => {
-      expect(formatPrice(1234.56, 'EUR')).toBe('€1,234.56')
-      expect(formatPrice(10000, 'EUR')).toBe('€10,000.00')
+      expect(formatPrice(123456, 'EUR')).toBe('€1,234.56')
+      expect(formatPrice(1000000, 'EUR')).toBe('€10,000.00')
     })
 
     it('handles zero amount', () => {
@@ -133,8 +128,8 @@ describe('Stripe Utilities', () => {
     })
 
     it('rounds to 2 decimal places', () => {
-      expect(formatPrice(29.999, 'EUR')).toBe('€30.00')
-      expect(formatPrice(29.994, 'EUR')).toBe('€29.99')
+      expect(formatPrice(3000, 'EUR')).toBe('€30.00')
+      expect(formatPrice(2999, 'EUR')).toBe('€29.99')
     })
   })
 
@@ -142,12 +137,12 @@ describe('Stripe Utilities', () => {
     it('calculates total with subtotal and shipping', () => {
       const result = calculateOrderTotal({
         subtotal: 100,
-        shippingCost: 4.95,
+        shippingCost: 495,
       })
 
-      expect(result.total).toBe(104.95)
+      expect(result.total).toBe(595)
       expect(result.subtotal).toBe(100)
-      expect(result.shippingCost).toBe(4.95)
+      expect(result.shippingCost).toBe(495)
       expect(result.tax).toBe(0)
       expect(result.discount).toBe(0)
     })
@@ -155,36 +150,36 @@ describe('Stripe Utilities', () => {
     it('applies discount to total', () => {
       const result = calculateOrderTotal({
         subtotal: 100,
-        shippingCost: 4.95,
+        shippingCost: 495,
         discount: 10,
       })
 
-      expect(result.total).toBe(94.95) // 100 + 4.95 - 10
+      expect(result.total).toBe(585)
       expect(result.discount).toBe(10)
     })
 
     it('calculates tax on subtotal', () => {
       const result = calculateOrderTotal({
         subtotal: 100,
-        shippingCost: 4.95,
+        shippingCost: 495,
         taxRate: 0.2, // 20% tax
       })
 
       expect(result.tax).toBe(20) // 20% of 100
-      expect(result.total).toBe(124.95) // 100 + 20 + 4.95
+      expect(result.total).toBe(615)
     })
 
     it('applies discount before calculating tax', () => {
       const result = calculateOrderTotal({
         subtotal: 100,
-        shippingCost: 4.95,
+        shippingCost: 495,
         discount: 10,
         taxRate: 0.2,
       })
 
       expect(result.subtotalAfterDiscount).toBe(90)
       expect(result.tax).toBe(18) // 20% of 90
-      expect(result.total).toBe(112.95) // 90 + 18 + 4.95
+      expect(result.total).toBe(603)
     })
 
     it('handles free shipping', () => {
@@ -200,23 +195,23 @@ describe('Stripe Utilities', () => {
     it('handles percentage discount', () => {
       const result = calculateOrderTotal({
         subtotal: 100,
-        shippingCost: 4.95,
+        shippingCost: 495,
         discountPercentage: 10, // 10% off
       })
 
       expect(result.discount).toBe(10) // 10% of 100
-      expect(result.total).toBe(94.95)
+      expect(result.total).toBe(585)
     })
 
     it('caps discount at subtotal amount', () => {
       const result = calculateOrderTotal({
         subtotal: 50,
-        shippingCost: 4.95,
+        shippingCost: 495,
         discount: 100, // Discount larger than subtotal
       })
 
       expect(result.discount).toBe(50) // Capped at subtotal
-      expect(result.total).toBe(4.95) // Only shipping remains
+      expect(result.total).toBe(495) // Only shipping remains
     })
 
     it('handles complex calculation with all factors', () => {
@@ -234,14 +229,14 @@ describe('Stripe Utilities', () => {
 
     it('rounds to 2 decimal places', () => {
       const result = calculateOrderTotal({
-        subtotal: 33.33,
-        shippingCost: 4.95,
+        subtotal: 3333,
+        shippingCost: 495,
         taxRate: 0.15,
       })
 
       // Tax: 33.33 * 0.15 = 4.9995 ≈ 5.00
-      expect(result.tax).toBeCloseTo(5.0, 2)
-      expect(result.total).toBeCloseTo(43.28, 2)
+      expect(result.tax).toBe(500)
+      expect(result.total).toBe(4328)
     })
   })
 

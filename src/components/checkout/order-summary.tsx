@@ -19,7 +19,7 @@ export function OrderSummary({
   total,
 }: OrderSummaryProps) {
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm sticky top-24">
+    <div data-testid="order-summary" className="bg-white rounded-lg p-6 shadow-sm sticky top-24">
       <h2 className="text-xl font-bold mb-6">Order Summary</h2>
 
       {/* Items */}

@@ -7,6 +7,10 @@ jest.mock('@/lib/prisma', () => ({
   prisma: {
     product: {
       findMany: jest.fn(),
+      count: jest.fn(),
+    },
+    review: {
+      findMany: jest.fn(),
     },
   },
 }))
@@ -14,6 +18,8 @@ jest.mock('@/lib/prisma', () => ({
 describe('GET /api/products', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    ;(prisma.product.count as jest.Mock).mockResolvedValue(0)
+    ;(prisma.review.findMany as jest.Mock).mockResolvedValue([])
   })
 
   it('returns all products', async () => {
@@ -37,6 +43,7 @@ describe('GET /api/products', () => {
     ]
 
     ;(prisma.product.findMany as jest.Mock).mockResolvedValue(mockProducts)
+    ;(prisma.product.count as jest.Mock).mockResolvedValue(mockProducts.length)
 
     const request = new NextRequest('http://localhost:3000/api/products')
     const response = await GET(request)
@@ -44,8 +51,14 @@ describe('GET /api/products', () => {
 
     expect(response.status).toBe(200)
     expect(data.success).toBe(true)
-    expect(data.data).toEqual(mockProducts)
     expect(data.data).toHaveLength(2)
+    expect(data.data[0]).toEqual(
+      expect.objectContaining({
+        ...mockProducts[0],
+        averageRating: 0,
+        reviewCount: 0,
+      })
+    )
   })
 
   it('filters products by category', async () => {
@@ -59,6 +72,7 @@ describe('GET /api/products', () => {
     ]
 
     ;(prisma.product.findMany as jest.Mock).mockResolvedValue(mockProducts)
+    ;(prisma.product.count as jest.Mock).mockResolvedValue(mockProducts.length)
 
     const request = new NextRequest(
       'http://localhost:3000/api/products?category=city-maps'
@@ -88,6 +102,7 @@ describe('GET /api/products', () => {
     ]
 
     ;(prisma.product.findMany as jest.Mock).mockResolvedValue(mockProducts)
+    ;(prisma.product.count as jest.Mock).mockResolvedValue(mockProducts.length)
 
     const request = new NextRequest(
       'http://localhost:3000/api/products?featured=true'

@@ -73,11 +73,11 @@ export default function RegisterPage() {
         <div className="text-center">
           <p className="text-xs text-gray-500">
             By creating an account, you agree to our{' '}
-            <Link href="/policies/terms-of-service" className="underline">
+            <Link href="/terms" className="underline">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link href="/policies/privacy-policy" className="underline">
+            <Link href="/privacy" className="underline">
               Privacy Policy
             </Link>
           </p>

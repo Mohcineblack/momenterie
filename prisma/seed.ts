@@ -68,6 +68,16 @@ async function main() {
         image: '/images/categories/photo-prints.jpg',
       },
     }),
+    prisma.category.upsert({
+      where: { slug: 'date-prints' },
+      update: {},
+      create: {
+        name: 'Date Prints',
+        slug: 'date-prints',
+        description: 'Minimal typography prints for meaningful dates',
+        image: '/images/categories/date-prints.jpg',
+      },
+    }),
   ]);
 
   console.log(`✅ Created ${categories.length} categories`);
@@ -85,20 +95,20 @@ async function main() {
       description:
         'Create a beautiful custom map of any city or location in the world. Perfect for commemorating special places like where you met, got engaged, or your favorite travel destination.',
       categoryId: categories[0].id,
-      basePrice: 29.99,
+      basePrice: 2999,
       images: ['/images/products/city-map-1.jpg', '/images/products/city-map-2.jpg'],
       featured: true,
       bestseller: true,
       variants: {
         create: [
           { name: 'A4 Poster', sku: 'CM-A4-POSTER', size: 'A4', material: 'Poster', priceModifier: 0, stock: 999 },
-          { name: 'A3 Poster', sku: 'CM-A3-POSTER', size: 'A3', material: 'Poster', priceModifier: 10, stock: 999 },
-          { name: '30x40cm Poster', sku: 'CM-30x40-POSTER', size: '30x40cm', material: 'Poster', priceModifier: 15, stock: 999 },
-          { name: '50x70cm Poster', sku: 'CM-50x70-POSTER', size: '50x70cm', material: 'Poster', priceModifier: 25, stock: 999 },
-          { name: 'A4 Framed', sku: 'CM-A4-FRAMED', size: 'A4', material: 'Framed', priceModifier: 40, stock: 999 },
-          { name: 'A3 Framed', sku: 'CM-A3-FRAMED', size: 'A3', material: 'Framed', priceModifier: 55, stock: 999 },
-          { name: '30x40cm Canvas', sku: 'CM-30x40-CANVAS', size: '30x40cm', material: 'Canvas', priceModifier: 50, stock: 999 },
-          { name: '50x70cm Canvas', sku: 'CM-50x70-CANVAS', size: '50x70cm', material: 'Canvas', priceModifier: 75, stock: 999 },
+          { name: 'A3 Poster', sku: 'CM-A3-POSTER', size: 'A3', material: 'Poster', priceModifier: 1000, stock: 999 },
+          { name: '30x40cm Poster', sku: 'CM-30x40-POSTER', size: '30x40cm', material: 'Poster', priceModifier: 1500, stock: 999 },
+          { name: '50x70cm Poster', sku: 'CM-50x70-POSTER', size: '50x70cm', material: 'Poster', priceModifier: 2500, stock: 999 },
+          { name: 'A4 Framed', sku: 'CM-A4-FRAMED', size: 'A4', material: 'Framed', priceModifier: 4000, stock: 999 },
+          { name: 'A3 Framed', sku: 'CM-A3-FRAMED', size: 'A3', material: 'Framed', priceModifier: 5500, stock: 999 },
+          { name: '30x40cm Canvas', sku: 'CM-30x40-CANVAS', size: '30x40cm', material: 'Canvas', priceModifier: 5000, stock: 999 },
+          { name: '50x70cm Canvas', sku: 'CM-50x70-CANVAS', size: '50x70cm', material: 'Canvas', priceModifier: 7500, stock: 999 },
         ],
       },
       customizationFields: {
@@ -168,18 +178,18 @@ async function main() {
       description:
         'Capture the exact position of the stars on any date and location. A unique gift commemorating weddings, births, anniversaries, or any special moment.',
       categoryId: categories[1].id,
-      basePrice: 34.99,
+      basePrice: 3499,
       images: ['/images/products/star-map-1.jpg', '/images/products/star-map-2.jpg'],
       featured: true,
       bestseller: true,
       variants: {
         create: [
           { name: 'A4 Poster', sku: 'SM-A4-POSTER', size: 'A4', material: 'Poster', priceModifier: 0, stock: 999 },
-          { name: 'A3 Poster', sku: 'SM-A3-POSTER', size: 'A3', material: 'Poster', priceModifier: 10, stock: 999 },
-          { name: '30x40cm Poster', sku: 'SM-30x40-POSTER', size: '30x40cm', material: 'Poster', priceModifier: 15, stock: 999 },
-          { name: '50x70cm Poster', sku: 'SM-50x70-POSTER', size: '50x70cm', material: 'Poster', priceModifier: 25, stock: 999 },
-          { name: 'A4 Framed', sku: 'SM-A4-FRAMED', size: 'A4', material: 'Framed', priceModifier: 40, stock: 999 },
-          { name: 'A3 Framed', sku: 'SM-A3-FRAMED', size: 'A3', material: 'Framed', priceModifier: 55, stock: 999 },
+          { name: 'A3 Poster', sku: 'SM-A3-POSTER', size: 'A3', material: 'Poster', priceModifier: 1000, stock: 999 },
+          { name: '30x40cm Poster', sku: 'SM-30x40-POSTER', size: '30x40cm', material: 'Poster', priceModifier: 1500, stock: 999 },
+          { name: '50x70cm Poster', sku: 'SM-50x70-POSTER', size: '50x70cm', material: 'Poster', priceModifier: 2500, stock: 999 },
+          { name: 'A4 Framed', sku: 'SM-A4-FRAMED', size: 'A4', material: 'Framed', priceModifier: 4000, stock: 999 },
+          { name: 'A3 Framed', sku: 'SM-A3-FRAMED', size: 'A3', material: 'Framed', priceModifier: 5500, stock: 999 },
         ],
       },
       customizationFields: {
@@ -250,15 +260,15 @@ async function main() {
       description:
         'Elevate your star map with stunning gold or silver foil accents. A premium option that adds luxury and elegance to your custom print.',
       categoryId: categories[1].id,
-      basePrice: 49.99,
+      basePrice: 4999,
       images: ['/images/products/foiled-star-map-1.jpg'],
       featured: true,
       variants: {
         create: [
           { name: 'A4 Gold Foil', sku: 'FSM-A4-GOLD', size: 'A4', material: 'Gold Foil', priceModifier: 0, stock: 999 },
           { name: 'A4 Silver Foil', sku: 'FSM-A4-SILVER', size: 'A4', material: 'Silver Foil', priceModifier: 0, stock: 999 },
-          { name: 'A3 Gold Foil', sku: 'FSM-A3-GOLD', size: 'A3', material: 'Gold Foil', priceModifier: 15, stock: 999 },
-          { name: 'A3 Silver Foil', sku: 'FSM-A3-SILVER', size: 'A3', material: 'Silver Foil', priceModifier: 15, stock: 999 },
+          { name: 'A3 Gold Foil', sku: 'FSM-A3-GOLD', size: 'A3', material: 'Gold Foil', priceModifier: 1500, stock: 999 },
+          { name: 'A3 Silver Foil', sku: 'FSM-A3-SILVER', size: 'A3', material: 'Silver Foil', priceModifier: 1500, stock: 999 },
         ],
       },
       customizationFields: {
@@ -282,14 +292,14 @@ async function main() {
       description:
         'Turn your favorite photo into a fun puzzle! Perfect for family activities and a unique way to display memories.',
       categoryId: categories[2].id,
-      basePrice: 24.99,
+      basePrice: 2499,
       images: ['/images/products/puzzle-1.jpg'],
       bestseller: true,
       variants: {
         create: [
           { name: '100 Pieces', sku: 'PZ-100', priceModifier: 0, stock: 999 },
-          { name: '500 Pieces', sku: 'PZ-500', priceModifier: 10, stock: 999 },
-          { name: '1000 Pieces', sku: 'PZ-1000', priceModifier: 15, stock: 999 },
+          { name: '500 Pieces', sku: 'PZ-500', priceModifier: 1000, stock: 999 },
+          { name: '1000 Pieces', sku: 'PZ-1000', priceModifier: 1500, stock: 999 },
         ],
       },
       customizationFields: {
@@ -322,17 +332,17 @@ async function main() {
       description:
         'Wear the stars of your special moment. A beautiful necklace featuring a custom star map engraved on a delicate pendant.',
       categoryId: categories[3].id,
-      basePrice: 79.99,
+      basePrice: 7999,
       images: ['/images/products/necklace-1.jpg'],
       featured: true,
       variants: {
         create: [
           { name: 'Gold 45cm', sku: 'NL-GOLD-45', material: 'Gold', priceModifier: 0, stock: 999 },
-          { name: 'Gold 50cm', sku: 'NL-GOLD-50', material: 'Gold', priceModifier: 5, stock: 999 },
-          { name: 'Silver 45cm', sku: 'NL-SILVER-45', material: 'Silver', priceModifier: -10, stock: 999 },
-          { name: 'Silver 50cm', sku: 'NL-SILVER-50', material: 'Silver', priceModifier: -5, stock: 999 },
-          { name: 'Rose Gold 45cm', sku: 'NL-ROSE-45', material: 'Rose Gold', priceModifier: 5, stock: 999 },
-          { name: 'Rose Gold 50cm', sku: 'NL-ROSE-50', material: 'Rose Gold', priceModifier: 10, stock: 999 },
+          { name: 'Gold 50cm', sku: 'NL-GOLD-50', material: 'Gold', priceModifier: 500, stock: 999 },
+          { name: 'Silver 45cm', sku: 'NL-SILVER-45', material: 'Silver', priceModifier: -1000, stock: 999 },
+          { name: 'Silver 50cm', sku: 'NL-SILVER-50', material: 'Silver', priceModifier: -500, stock: 999 },
+          { name: 'Rose Gold 45cm', sku: 'NL-ROSE-45', material: 'Rose Gold', priceModifier: 500, stock: 999 },
+          { name: 'Rose Gold 50cm', sku: 'NL-ROSE-50', material: 'Rose Gold', priceModifier: 1000, stock: 999 },
         ],
       },
       customizationFields: {
@@ -354,14 +364,14 @@ async function main() {
       description:
         'Showcase your favorite song with album art and a scannable Spotify code. A perfect gift for music lovers!',
       categoryId: categories[4].id,
-      basePrice: 27.99,
+      basePrice: 2799,
       images: ['/images/products/song-display-1.jpg'],
       bestseller: true,
       variants: {
         create: [
           { name: 'A4 Poster', sku: 'SD-A4-POSTER', size: 'A4', material: 'Poster', priceModifier: 0, stock: 999 },
-          { name: 'A3 Poster', sku: 'SD-A3-POSTER', size: 'A3', material: 'Poster', priceModifier: 10, stock: 999 },
-          { name: 'A4 Framed', sku: 'SD-A4-FRAMED', size: 'A4', material: 'Framed', priceModifier: 40, stock: 999 },
+          { name: 'A3 Poster', sku: 'SD-A3-POSTER', size: 'A3', material: 'Poster', priceModifier: 1000, stock: 999 },
+          { name: 'A4 Framed', sku: 'SD-A4-FRAMED', size: 'A4', material: 'Framed', priceModifier: 4000, stock: 999 },
         ],
       },
       customizationFields: {
@@ -392,6 +402,43 @@ async function main() {
     },
   });
 
+  // Date Print
+  await prisma.product.upsert({
+    where: { slug: 'date-print' },
+    update: {},
+    create: {
+      name: 'Custom Date Print',
+      slug: 'date-print',
+      description:
+        'Celebrate a birthday, anniversary, wedding, or milestone with a clean personalized date print.',
+      categoryId: categories[6].id,
+      basePrice: 1999,
+      images: ['/images/products/date-print-1.jpg'],
+      featured: true,
+      variants: {
+        create: [
+          { name: 'A4 Poster', sku: 'DP-A4-POSTER', size: 'A4', material: 'Poster', priceModifier: 0, stock: 999 },
+          { name: 'A3 Poster', sku: 'DP-A3-POSTER', size: 'A3', material: 'Poster', priceModifier: 1000, stock: 999 },
+          { name: 'A4 Framed', sku: 'DP-A4-FRAMED', size: 'A4', material: 'Framed', priceModifier: 3500, stock: 999 },
+        ],
+      },
+      customizationFields: {
+        create: [
+          { fieldName: 'date', fieldType: 'date', label: 'Special Date', required: true },
+          { fieldName: 'title', fieldType: 'text', label: 'Title', required: true },
+          { fieldName: 'subtitle', fieldType: 'text', label: 'Subtitle', required: false },
+          {
+            fieldName: 'style',
+            fieldType: 'select',
+            label: 'Typography Style',
+            options: { values: ['classic', 'modern', 'minimal', 'romantic'] },
+            required: true,
+          },
+        ],
+      },
+    },
+  });
+
   console.log('✅ Created products with variants and customization fields');
 
   // Create sample coupons
@@ -405,7 +452,7 @@ async function main() {
       discountType: 'percentage',
       discountValue: 10,
       minPurchase: 0,
-      maxDiscount: 50,
+      maxDiscount: 5000,
       usageLimit: 1000,
       validFrom: new Date(),
       validUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
@@ -420,8 +467,8 @@ async function main() {
       code: 'FREESHIP',
       description: 'Free shipping on orders over €30',
       discountType: 'fixed',
-      discountValue: 4.95,
-      minPurchase: 30,
+      discountValue: 495,
+      minPurchase: 3000,
       validFrom: new Date(),
       active: true,
     },

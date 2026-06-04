@@ -9,7 +9,7 @@ import { EditorControls } from "@/components/editor/citymap/editor-controls";
 import { useCityMapStore } from "@/store/citymap-store";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cart-store";
-import { CityMapCustomization } from "@/types";
+import type { CitymapSpec } from "@/lib/render/spec";
 import { Save, ShoppingCart } from "lucide-react";
 
 function CityMapEditorPage() {
@@ -18,7 +18,7 @@ function CityMapEditorPage() {
   const productSlug = searchParams.get("product");
 
   const { addItem } = useCartStore();
-  const { location, title, subtitle, date, mapStyle, resetEditor } =
+  const { location, title, subtitle, date, mapStyle, zoom, resetEditor } =
     useCityMapStore();
 
   const [mounted, setMounted] = useState(false);
@@ -107,22 +107,20 @@ function CityMapEditorPage() {
     }
 
     try {
-      const customizationData: CityMapCustomization = {
-        location: {
-          address: location.placeName,
-          lat: location.lat,
-          lng: location.lng,
-        },
+      const customizationData: CitymapSpec = {
+        productType: "citymap",
+        location,
+        zoom,
+        bearing: 0,
+        mapStyleId: mapStyle.id,
+        title,
+        subtitle,
         date,
-        customText: {
-          title,
-          subtitle,
-          coordinates: true,
-        },
-        style: {
-          mapStyle: mapStyle.id,
-          colorScheme: mapStyle.name,
-        },
+        showCoordinates: true,
+        markers: [],
+        photoUrls: [],
+        size: "30x40",
+        material: "poster",
       };
 
       addItem({
@@ -132,8 +130,8 @@ function CityMapEditorPage() {
         variantId: selectedVariant.id,
         variantName: selectedVariant.name,
         quantity: 1,
-        basePrice: parseFloat(product.price),
-        variantPrice: parseFloat(selectedVariant.price),
+        basePrice: product.basePrice,
+        variantPrice: selectedVariant.priceModifier,
         customizationData,
       });
 

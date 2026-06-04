@@ -1,10 +1,18 @@
 import mapboxgl from 'mapbox-gl';
 
-if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
-  throw new Error('NEXT_PUBLIC_MAPBOX_TOKEN is not defined');
+const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+
+if (mapboxToken) {
+  mapboxgl.accessToken = mapboxToken;
 }
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+function getMapboxToken() {
+  if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
+    throw new Error('NEXT_PUBLIC_MAPBOX_TOKEN is not defined');
+  }
+
+  return process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+}
 
 export interface GeocodeResult {
   place_name: string;
@@ -26,8 +34,9 @@ export interface GeocodeResponse {
  */
 export async function geocodeLocation(query: string): Promise<GeocodeResponse> {
   try {
+    const token = getMapboxToken();
     const response = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&limit=5`
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=5`
     );
 
     if (!response.ok) {
@@ -46,8 +55,9 @@ export async function geocodeLocation(query: string): Promise<GeocodeResponse> {
  */
 export async function reverseGeocode(lng: number, lat: number): Promise<GeocodeResponse> {
   try {
+    const token = getMapboxToken();
     const response = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${token}`
     );
 
     if (!response.ok) {
@@ -73,6 +83,8 @@ export function createMapInstance(
     interactive?: boolean;
   }
 ) {
+  mapboxgl.accessToken = getMapboxToken();
+
   return new mapboxgl.Map({
     container,
     style: options.style || 'mapbox://styles/mapbox/streets-v12',

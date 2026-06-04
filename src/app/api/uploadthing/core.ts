@@ -4,8 +4,7 @@ import { auth } from "@/lib/auth";
 const f = createUploadthing();
 
 export const ourFileRouter = {
-  // Image uploader for product customization (puzzles, photo prints, etc.)
-  productImage: f({
+  customizationImage: f({
     image: {
       maxFileSize: "8MB",
       maxFileCount: 1,
@@ -17,12 +16,16 @@ export const ourFileRouter = {
       // Allow guests to upload for customization
       return {
         userId: session?.user?.id || "guest",
+        uploadKind: "customization",
+        temporary: true,
         uploadedAt: new Date().toISOString(),
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload complete:", {
         userId: metadata.userId,
+        uploadKind: metadata.uploadKind,
+        temporary: metadata.temporary,
         fileUrl: file.url,
         uploadedAt: metadata.uploadedAt,
       });
@@ -33,7 +36,34 @@ export const ourFileRouter = {
       };
     }),
 
-  // Multiple images for reviews
+  productImage: f({
+    image: {
+      maxFileSize: "4MB",
+      maxFileCount: 1,
+    },
+  })
+    .middleware(async () => {
+      const session = await auth();
+
+      if (!session?.user || session.user.role !== "admin") {
+        throw new Error("Unauthorized - admin only");
+      }
+
+      return {
+        userId: session.user.id,
+        uploadKind: "catalog",
+        temporary: false,
+      };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log("Catalog image uploaded:", {
+        userId: metadata.userId,
+        fileUrl: file.url,
+      });
+
+      return { url: file.url, userId: metadata.userId };
+    }),
+
   reviewImages: f({
     image: {
       maxFileSize: "4MB",

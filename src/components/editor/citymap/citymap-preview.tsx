@@ -1,105 +1,58 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import { useCityMapStore } from '@/store/citymap-store';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { useEffect, useState } from "react";
+import { useCityMapStore } from "@/store/citymap-store";
+import { renderCitymapArtworkSvg, type OverpassElement } from "@/lib/render/citymap-artwork";
+import type { CitymapSpec } from "@/lib/render/spec";
 
 export function CityMapPreview() {
-  const previewContainer = useRef<HTMLDivElement>(null);
-  const previewMap = useRef<mapboxgl.Map | null>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
-
   const { location, title, subtitle, date, mapStyle, zoom } = useCityMapStore();
+  const [svg, setSvg] = useState("");
 
-  // Initialize preview map
   useEffect(() => {
-    if (!previewContainer.current || !location) return;
+    let cancelled = false;
 
-    // Clean up existing map
-    if (previewMap.current) {
-      previewMap.current.remove();
+    async function renderPreview() {
+      if (!location) {
+        setSvg("");
+        return;
+      }
+
+      const spec: CitymapSpec = {
+        productType: "citymap",
+        location,
+        zoom,
+        bearing: 0,
+        mapStyleId: mapStyle.id,
+        title,
+        subtitle,
+        date,
+        showCoordinates: true,
+        markers: [],
+        photoUrls: [],
+        size: "30x40",
+        material: "poster",
+      };
+      const nextSvg = await renderCitymapArtworkSvg(spec, loadPreviewFeatures);
+      if (!cancelled) {
+        setSvg(nextSvg);
+      }
     }
 
-    // Create new map
-    previewMap.current = new mapboxgl.Map({
-      container: previewContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [location.lng, location.lat],
-      zoom: zoom,
-      interactive: false, // Disable interactions for preview
-      attributionControl: false,
-    });
-
-    previewMap.current.on('load', () => {
-      setMapLoaded(true);
-    });
+    renderPreview();
 
     return () => {
-      if (previewMap.current) {
-        previewMap.current.remove();
-        previewMap.current = null;
-      }
+      cancelled = true;
     };
-  }, [location]);
-
-  // Update map style colors
-  useEffect(() => {
-    if (!previewMap.current || !mapLoaded) return;
-
-    try {
-      // Apply custom colors to map layers
-      const map = previewMap.current;
-
-      // Water
-      if (map.getLayer('water')) {
-        map.setPaintProperty('water', 'fill-color', mapStyle.colors.water);
-      }
-
-      // Land/background
-      if (map.getLayer('land')) {
-        map.setPaintProperty('land', 'fill-color', mapStyle.colors.land);
-      }
-
-      // Roads
-      if (map.getLayer('road')) {
-        map.setPaintProperty('road', 'line-color', mapStyle.colors.roads);
-      }
-
-      // Buildings
-      if (map.getLayer('building')) {
-        map.setPaintProperty('building', 'fill-color', mapStyle.colors.buildings);
-      }
-
-      // Labels
-      const labelLayers = ['place-city', 'place-town', 'poi-label', 'road-label'];
-      labelLayers.forEach((layerId) => {
-        if (map.getLayer(layerId)) {
-          map.setPaintProperty(layerId, 'text-color', mapStyle.colors.text);
-        }
-      });
-    } catch (error) {
-      console.error('Error applying map styles:', error);
-    }
-  }, [mapStyle, mapLoaded]);
-
-  // Update map position and zoom
-  useEffect(() => {
-    if (!previewMap.current || !location) return;
-
-    previewMap.current.jumpTo({
-      center: [location.lng, location.lat],
-      zoom: zoom,
-    });
-  }, [location, zoom]);
+  }, [location, title, subtitle, date, mapStyle.id, zoom]);
 
   if (!location) {
     return (
       <div
         className="w-full rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center"
         style={{
-          aspectRatio: '2/3',
-          backgroundColor: '#f9f9f9',
+          aspectRatio: "2/3",
+          backgroundColor: "#f9f9f9",
         }}
       >
         <div className="text-center p-8">
@@ -117,9 +70,7 @@ export function CityMapPreview() {
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-gray-700 mb-2">No location selected</h3>
-          <p className="text-sm text-gray-500">
-            Search for a location on the map to see your preview
-          </p>
+          <p className="text-sm text-gray-500">Search for a location on the map to see your preview</p>
         </div>
       </div>
     );
@@ -130,80 +81,48 @@ export function CityMapPreview() {
       <div
         className="relative rounded-lg overflow-hidden shadow-xl"
         style={{
-          aspectRatio: '2/3',
+          aspectRatio: "2/3",
           backgroundColor: mapStyle.colors.background,
         }}
-      >
-        {/* Map Section (70% of height) */}
-        <div className="absolute top-0 left-0 right-0" style={{ height: '70%' }}>
-          <div
-            ref={previewContainer}
-            className="w-full h-full"
-            style={{ filter: 'contrast(1.1) saturate(0.9)' }}
-          />
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
 
-          {/* Loading overlay */}
-          {!mapLoaded && (
-            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 rounded-full animate-spin"></div>
-            </div>
-          )}
-        </div>
-
-        {/* Text Section (30% of height) */}
-        <div
-          className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-center px-8 py-6"
-          style={{
-            height: '30%',
-            backgroundColor: mapStyle.colors.background,
-            color: mapStyle.colors.text,
-          }}
-        >
-          {/* Title */}
-          {title && (
-            <h2
-              className="text-2xl font-bold text-center mb-2"
-              style={{ color: mapStyle.colors.text }}
-            >
-              {title}
-            </h2>
-          )}
-
-          {/* Subtitle */}
-          {subtitle && (
-            <p
-              className="text-sm text-center mb-1 opacity-80"
-              style={{ color: mapStyle.colors.text }}
-            >
-              {subtitle}
-            </p>
-          )}
-
-          {/* Date */}
-          {date && (
-            <p
-              className="text-xs text-center opacity-60"
-              style={{ color: mapStyle.colors.text }}
-            >
-              {date}
-            </p>
-          )}
-
-          {/* Coordinates */}
-          <div className="mt-3 flex items-center gap-2 text-xs opacity-50">
-            <span style={{ color: mapStyle.colors.text }}>
-              {location.lat.toFixed(4)}° N
-            </span>
-            <span style={{ color: mapStyle.colors.text }}>•</span>
-            <span style={{ color: mapStyle.colors.text }}>
-              {location.lng.toFixed(4)}° E
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Frame Shadow */}
-      <div className="absolute inset-0 rounded-lg shadow-2xl pointer-events-none border-8 border-white"></div>
+      <div className="absolute inset-0 rounded-lg shadow-2xl pointer-events-none border-8 border-white" />
     </div>
   );
+}
+
+async function loadPreviewFeatures(bbox: {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}): Promise<OverpassElement[]> {
+  const centerLat = (bbox.north + bbox.south) / 2;
+  const centerLng = (bbox.east + bbox.west) / 2;
+  const nodes: OverpassElement[] = [];
+  const ways: OverpassElement[] = [];
+  let id = 1;
+
+  for (let i = -4; i <= 4; i += 1) {
+    const lat = bbox.south + ((i + 4) / 8) * (bbox.north - bbox.south);
+    nodes.push({ type: "node", id: id++, lat, lon: bbox.west });
+    nodes.push({ type: "node", id: id++, lat, lon: bbox.east });
+    ways.push({ type: "way", id: id++, nodes: [id - 3, id - 2], tags: { highway: i % 2 === 0 ? "primary" : "residential" } });
+  }
+
+  for (let i = -3; i <= 3; i += 1) {
+    const lon = bbox.west + ((i + 3) / 6) * (bbox.east - bbox.west);
+    nodes.push({ type: "node", id: id++, lat: bbox.south, lon });
+    nodes.push({ type: "node", id: id++, lat: bbox.north, lon });
+    ways.push({ type: "way", id: id++, nodes: [id - 3, id - 2], tags: { highway: "residential" } });
+  }
+
+  nodes.push({ type: "node", id: id++, lat: centerLat + 0.02, lon: bbox.west + 0.02 });
+  nodes.push({ type: "node", id: id++, lat: centerLat + 0.02, lon: bbox.east - 0.02 });
+  nodes.push({ type: "node", id: id++, lat: centerLat - 0.02, lon: bbox.east - 0.02 });
+  nodes.push({ type: "node", id: id++, lat: centerLat - 0.02, lon: bbox.west + 0.02 });
+  ways.push({ type: "way", id: id++, nodes: [id - 5, id - 4, id - 3, id - 2, id - 5], tags: { natural: "water", name: "River" } });
+
+  return [...nodes, ...ways, { type: "node", id: id++, lat: centerLat, lon: centerLng, tags: { place: "city", name: "Center" } }];
 }

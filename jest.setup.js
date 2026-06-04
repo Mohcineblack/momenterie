@@ -1,6 +1,84 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom'
 
+const { TextEncoder, TextDecoder } = require('util')
+
+global.TextEncoder = global.TextEncoder || TextEncoder
+global.TextDecoder = global.TextDecoder || TextDecoder
+
+if (typeof global.Request === 'undefined') {
+  class MockRequest {
+    constructor(input, init = {}) {
+      Object.defineProperty(this, 'url', {
+        value: typeof input === 'string' ? input : input?.url,
+        configurable: true,
+      })
+      Object.defineProperty(this, 'method', {
+        value: init.method || 'GET',
+        configurable: true,
+      })
+      Object.defineProperty(this, 'headers', {
+        value: new Headers(init.headers),
+        configurable: true,
+      })
+      Object.defineProperty(this, 'body', {
+        value: init.body,
+        configurable: true,
+      })
+    }
+
+    async json() {
+      return typeof this.body === 'string' ? JSON.parse(this.body) : this.body
+    }
+
+    async text() {
+      return typeof this.body === 'string' ? this.body : JSON.stringify(this.body)
+    }
+  }
+
+  global.Request = MockRequest
+}
+
+if (typeof global.Response === 'undefined') {
+  global.Response = class MockResponse {
+    constructor(body, init = {}) {
+      this.body = body
+      this.status = init.status || 200
+      this.headers = new Headers(init.headers)
+    }
+
+    static json(body, init = {}) {
+      return new MockResponse(JSON.stringify(body), {
+        ...init,
+        headers: {
+          'content-type': 'application/json',
+          ...(init.headers || {}),
+        },
+      })
+    }
+
+    async json() {
+      return typeof this.body === 'string' ? JSON.parse(this.body) : this.body
+    }
+
+    async text() {
+      return typeof this.body === 'string' ? this.body : JSON.stringify(this.body)
+    }
+  }
+}
+
+if (typeof global.Headers === 'undefined') {
+  global.Headers = class MockHeaders {
+    constructor(init = {}) {
+      this.map = new Map(Object.entries(init))
+    }
+
+    get(key) {
+      return this.map.get(key)
+    }
+  }
+}
+
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter() {
@@ -79,8 +157,10 @@ jest.mock('@stripe/stripe-js', () => ({
 jest.mock('@stripe/react-stripe-js', () => ({
   Elements: ({ children }) => children,
   CardElement: () => <div data-testid="card-element">Card Element</div>,
+  PaymentElement: () => <div data-testid="card-element">Payment Element</div>,
   useStripe: () => ({
     confirmCardPayment: jest.fn(),
+    confirmPayment: jest.fn(),
   }),
   useElements: () => ({
     getElement: jest.fn(),
@@ -102,6 +182,7 @@ jest.mock('@/lib/prisma', () => ({
       findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
     },
     order: {
       findUnique: jest.fn(),
@@ -110,6 +191,9 @@ jest.mock('@/lib/prisma', () => ({
       update: jest.fn(),
       count: jest.fn(),
       aggregate: jest.fn(),
+    },
+    orderItem: {
+      findFirst: jest.fn(),
     },
     review: {
       findFirst: jest.fn(),

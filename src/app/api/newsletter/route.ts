@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 const newsletterSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -8,6 +9,16 @@ const newsletterSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimit = checkRateLimit({
+      key: `newsletter:${getClientIp(request)}`,
+      limit: 10,
+      windowMs: 60 * 60 * 1000,
+    });
+
+    if (rateLimit.limited) {
+      return rateLimitResponse(rateLimit.resetAt);
+    }
+
     const body = await request.json();
     const validatedData = newsletterSchema.parse(body);
 
@@ -58,24 +69,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Optional: GET endpoint for admin to view subscribers
-export async function GET(request: NextRequest) {
-  try {
-    // You could add admin authentication here
-    const subscribers = await prisma.newsletter.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: subscribers,
-      count: subscribers.length,
-    });
-  } catch (error: any) {
-    console.error('Error fetching newsletter subscribers:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch subscribers' },
-      { status: 500 }
-    );
-  }
-}

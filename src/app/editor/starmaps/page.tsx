@@ -4,12 +4,11 @@ import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EditorHeader } from "@/components/editor/editor-header";
 import { StarMapControls } from "@/components/editor/starmap/starmap-controls";
-import { StarMapCanvas } from "@/components/editor/starmap/starmap-canvas";
 import { StarMapPreview } from "@/components/editor/starmap/starmap-preview";
 import { useStarMapStore } from "@/store/starmap-store";
 import { useCartStore } from "@/store/cart-store";
 import { toast } from "sonner";
-import { StarMapCustomization } from "@/types";
+import type { StarmapSpec } from "@/lib/render/spec";
 import { Save, ShoppingCart } from "lucide-react";
 
 function StarMapEditorPage() {
@@ -122,22 +121,19 @@ function StarMapEditorPage() {
     }
 
     try {
-      const customizationData: StarMapCustomization = {
-        location: {
-          address: location.placeName,
-          lat: location.lat,
-          lng: location.lng,
-        },
-        date: date.toISOString(),
-        time,
-        customText: {
-          title,
-          message: subtitle,
-        },
-        style: {
-          colorTheme: style.id,
-          showConstellations,
-        },
+      const customizationData: StarmapSpec = {
+        productType: "starmap",
+        location,
+        datetimeUtc: toDateTimeUtc(date, time),
+        title,
+        subtitle,
+        styleId: style.id,
+        showConstellations,
+        showGrid,
+        showMilkyWay: true,
+        magnitudeLimit: 6.5,
+        size: "30x40",
+        material: "poster",
       };
 
       addItem({
@@ -147,8 +143,8 @@ function StarMapEditorPage() {
         variantId: selectedVariant.id,
         variantName: selectedVariant.name,
         quantity: 1,
-        basePrice: parseFloat(product.price),
-        variantPrice: parseFloat(selectedVariant.price),
+        basePrice: product.basePrice,
+        variantPrice: selectedVariant.priceModifier,
         customizationData,
       });
 
@@ -200,21 +196,8 @@ function StarMapEditorPage() {
             </div>
           </div>
 
-          {/* Right Column - Canvas & Preview */}
+          {/* Right Column - Preview */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Star Canvas */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="p-4 border-b">
-                <h3 className="font-semibold">Night Sky Simulation</h3>
-                <p className="text-sm text-gray-600">
-                  View the stars as they appeared at your chosen moment
-                </p>
-              </div>
-              <div className="p-6 bg-gray-900">
-                <StarMapCanvas />
-              </div>
-            </div>
-
             {/* Preview */}
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="p-4 border-b">
@@ -253,6 +236,13 @@ function StarMapEditorPage() {
       </div>
     </div>
   );
+}
+
+function toDateTimeUtc(date: Date, time: string) {
+  const [hours, minutes] = time.split(":").map(Number);
+  const dateTime = new Date(date);
+  dateTime.setHours(hours || 0, minutes || 0, 0, 0);
+  return dateTime.toISOString();
 }
 
 export default function StarMapEditorPageWrapper() {

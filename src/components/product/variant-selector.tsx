@@ -71,6 +71,7 @@ export function VariantSelector({
             return (
               <button
                 key={variant.id}
+                data-testid="variant-option"
                 onClick={() => handleVariantSelect(variant)}
                 className={`relative flex items-center justify-between p-4 border-2 rounded-lg transition-all ${
                   isSelected
@@ -104,7 +105,7 @@ export function VariantSelector({
           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
             <div className="flex justify-between items-center">
               <span className="text-gray-700">Total Price:</span>
-              <span className="text-2xl font-bold text-gray-900">
+              <span data-testid="product-price" className="text-2xl font-bold text-gray-900">
                 {formatPrice(totalPrice)}
               </span>
             </div>
@@ -150,6 +151,7 @@ export function VariantSelector({
                 return (
                   <button
                     key={variant.id}
+                    data-testid="variant-option"
                     onClick={() => handleVariantSelect(variant)}
                     className={`relative p-3 border-2 rounded-lg transition-all text-left ${
                       isSelected
@@ -186,7 +188,7 @@ export function VariantSelector({
         <div className="p-4 bg-blue-50 rounded-lg">
           <div className="flex justify-between items-center">
             <span className="text-gray-700">Total Price:</span>
-            <span className="text-2xl font-bold text-gray-900">
+            <span data-testid="product-price" className="text-2xl font-bold text-gray-900">
               {formatPrice(totalPrice)}
             </span>
           </div>

@@ -11,6 +11,7 @@ import { CheckoutSteps } from "@/components/checkout/checkout-steps";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { CheckoutFormData } from "@/types";
+import { calculateShippingCost, calculateTax } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -23,6 +24,13 @@ export default function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<Partial<CheckoutFormData>>({});
   const [clientSecret, setClientSecret] = useState<string>("");
+  const [orderId, setOrderId] = useState<string>("");
+  const [serverTotals, setServerTotals] = useState<{
+    subtotal: number;
+    shipping: number;
+    tax: number;
+    total: number;
+  } | null>(null);
   const [isCreatingIntent, setIsCreatingIntent] = useState(false);
 
   useEffect(() => {
@@ -37,8 +45,9 @@ export default function CheckoutPage() {
   }, [mounted, items, router]);
 
   const subtotal = getTotalPrice();
-  const shipping = subtotal >= 50 ? 0 : 4.95;
-  const tax = subtotal * 0.19;
+  const shippingCountry = formData.shipping?.country || "DE";
+  const shipping = calculateShippingCost(shippingCountry, subtotal);
+  const tax = calculateTax(subtotal, shippingCountry);
   const total = subtotal + shipping + tax;
 
   const handleShippingComplete = async (data: CheckoutFormData["shipping"]) => {
@@ -49,27 +58,36 @@ export default function CheckoutPage() {
   const handleBillingComplete = async (data: CheckoutFormData["billing"]) => {
     setFormData((prev) => ({ ...prev, billing: data }));
 
-    // Create payment intent
+    // Create the order and PaymentIntent together so Stripe metadata can carry orderId.
     setIsCreatingIntent(true);
     try {
-      const response = await fetch("/api/create-payment-intent", {
+      const response = await fetch("/api/checkout/create-order-and-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: total,
+          shipping: formData.shipping,
+          billing: data,
           items: items.map((item) => ({
             productId: item.productId,
             variantId: item.variantId,
             quantity: item.quantity,
             customizationData: item.customizationData,
+            previewImageUrl: item.previewImageUrl,
           })),
         }),
       });
 
       const result = await response.json();
 
-      if (result.success && result.data?.clientSecret) {
+      if (result.success && result.data?.clientSecret && result.data?.orderId) {
         setClientSecret(result.data.clientSecret);
+        setOrderId(result.data.orderId);
+        setServerTotals({
+          subtotal: result.data.subtotal,
+          shipping: result.data.shipping,
+          tax: result.data.tax,
+          total: result.data.total,
+        });
         setCurrentStep(3);
       } else {
         alert("Failed to initialize payment. Please try again.");
@@ -136,7 +154,7 @@ export default function CheckoutPage() {
               />
             )}
 
-            {currentStep === 3 && clientSecret && (
+            {currentStep === 3 && clientSecret && orderId && (
               <Elements
                 stripe={stripePromise}
                 options={{
@@ -153,13 +171,8 @@ export default function CheckoutPage() {
                   clientSecret={clientSecret}
                   onBack={() => setCurrentStep(2)}
                   checkoutData={{
-                    shippingAddress: formData.shipping,
-                    billingAddress: formData.billing,
-                    items,
-                    subtotal,
-                    shippingCost: shipping,
-                    tax,
-                    total,
+                    orderId,
+                    total: serverTotals?.total ?? total,
                   }}
                 />
               </Elements>
@@ -170,10 +183,10 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1">
             <OrderSummary
               items={items}
-              subtotal={subtotal}
-              shipping={shipping}
-              tax={tax}
-              total={total}
+              subtotal={serverTotals?.subtotal ?? subtotal}
+              shipping={serverTotals?.shipping ?? shipping}
+              tax={serverTotals?.tax ?? tax}
+              total={serverTotals?.total ?? total}
             />
           </div>
         </div>

@@ -10,6 +10,7 @@ import { RelatedProducts } from "@/components/product/related-products";
 import { WriteReview } from "@/components/product/write-review";
 import { Breadcrumb } from "@/components/shared/breadcrumb";
 import { formatPrice } from "@/lib/utils";
+import { getEditorRoute } from "@/lib/editor-routes";
 import { Star, Shield, Truck, ArrowRight } from "lucide-react";
 
 interface PageProps {
@@ -93,13 +94,13 @@ export default async function ProductPage({ params }: PageProps) {
   if (session?.user) {
     hasPurchased = !!(await prisma.orderItem.findFirst({
       where: {
-        productId: product.id,
-        order: {
-          userId: session.user.id,
-          paymentStatus: "paid",
+          productId: product.id,
+          order: {
+            userId: session.user.id,
+            paymentStatus: "PAID",
+          },
         },
-      },
-    }));
+      }));
 
     hasReviewed = !!(await prisma.review.findFirst({
       where: {
@@ -132,6 +133,7 @@ export default async function ProductPage({ params }: PageProps) {
     },
     { label: product.name, href: `/products/${product.slug}` },
   ];
+  const editorRoute = getEditorRoute(product.category.slug, product.slug);
 
   return (
     <div className="min-h-screen bg-white">
@@ -213,13 +215,20 @@ export default async function ProductPage({ params }: PageProps) {
             )}
 
             {/* CTA Button */}
-            <Link
-              href={`/editor/${product.category.slug.replace("-", "")}?product=${product.slug}`}
-              className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium text-lg mb-8"
-            >
-              Start Customizing
-              <ArrowRight className="w-5 h-5" />
-            </Link>
+            {editorRoute ? (
+              <Link
+                href={editorRoute}
+                role="button"
+                className="w-full flex items-center justify-center gap-2 px-8 py-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors font-medium text-lg mb-8"
+              >
+                Start Customizing
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            ) : (
+              <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 px-6 py-4 text-amber-900">
+                Customizer coming soon for this product.
+              </div>
+            )}
 
             {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-4 py-8 border-t border-b">

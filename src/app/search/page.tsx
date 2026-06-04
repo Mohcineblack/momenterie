@@ -10,13 +10,14 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     q?: string;
-  };
+  }>;
 }
 
 export default async function SearchPage({ searchParams }: PageProps) {
-  const query = searchParams.q || '';
+  const search = await searchParams;
+  const query = search.q || '';
 
   let products: any[] = [];
   let categories: any[] = [];

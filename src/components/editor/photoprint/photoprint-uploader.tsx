@@ -5,6 +5,7 @@ import { useDropzone } from "react-dropzone";
 import { usePhotoPrintStore } from "@/store/photoprint-store";
 import { Upload, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { validatePrintImageResolution } from "@/lib/image-validation";
 
 export function PhotoPrintUploader() {
   const {
@@ -34,6 +35,14 @@ export function PhotoPrintUploader() {
       }
 
       try {
+        const resolution = await validatePrintImageResolution(file);
+        if (!resolution.valid) {
+          toast.error(
+            `Photo is too small (${resolution.width}x${resolution.height}px). Please use at least 2000x2000px.`
+          );
+          return;
+        }
+
         setIsUploading(true);
         setUploadProgress(0);
 

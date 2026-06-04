@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Lock } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
+import { formatPrice } from "@/lib/utils";
 
 interface PaymentFormProps {
   clientSecret: string;
@@ -41,34 +42,11 @@ export function PaymentForm({
     setErrorMessage("");
 
     try {
-      // Create the order in our database first
-      const orderResponse = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          shipping: checkoutData.shippingAddress,
-          billing: checkoutData.billingAddress,
-          items: checkoutData.items,
-          subtotal: checkoutData.subtotal,
-          shippingCost: checkoutData.shippingCost,
-          tax: checkoutData.tax,
-          total: checkoutData.total,
-        }),
-      });
-
-      const orderResult = await orderResponse.json();
-
-      if (!orderResult.success) {
-        throw new Error(orderResult.error || "Failed to create order");
-      }
-
-      const orderId = orderResult.data.orderId;
-
       // Confirm the payment with Stripe
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/orders/confirmation/${orderId}`,
+          return_url: `${window.location.origin}/orders/confirmation/${checkoutData.orderId}?payment_intent_client_secret=${encodeURIComponent(clientSecret)}`,
         },
         redirect: "if_required",
       });
@@ -77,10 +55,11 @@ export function PaymentForm({
         setErrorMessage(error.message || "Payment failed. Please try again.");
         toast.error(error.message || "Payment failed");
       } else if (paymentIntent && paymentIntent.status === "succeeded") {
-        // Payment successful!
         toast.success("Payment successful!");
         clearCart();
-        router.push(`/orders/confirmation/${orderId}`);
+        router.push(
+          `/orders/confirmation/${checkoutData.orderId}?payment_intent_client_secret=${encodeURIComponent(clientSecret)}`
+        );
       }
     } catch (error: any) {
       console.error("Payment error:", error);
@@ -92,7 +71,7 @@ export function PaymentForm({
   };
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm">
+    <div data-testid="payment-form" className="bg-white rounded-lg p-6 shadow-sm">
       <h2 className="text-xl font-bold mb-6">Payment</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -139,8 +118,7 @@ export function PaymentForm({
             ) : (
               <>
                 <Lock className="w-5 h-5" />
-                Pay{" "}
-                {checkoutData.total ? `€${checkoutData.total.toFixed(2)}` : ""}
+                Pay {checkoutData.total ? formatPrice(checkoutData.total) : ""}
               </>
             )}
           </button>
@@ -149,11 +127,11 @@ export function PaymentForm({
         {/* Terms */}
         <p className="text-xs text-gray-500 text-center">
           By placing this order, you agree to our{" "}
-          <a href="/policies/terms-of-service" className="underline">
+          <a href="/terms" className="underline">
             Terms of Service
           </a>{" "}
           and{" "}
-          <a href="/policies/privacy-policy" className="underline">
+          <a href="/privacy" className="underline">
             Privacy Policy
           </a>
         </p>

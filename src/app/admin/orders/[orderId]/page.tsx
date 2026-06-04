@@ -187,9 +187,9 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                   <p className="text-gray-600 mb-1">Payment Status</p>
                   <p
                     className={`font-medium ${
-                      order.paymentStatus === 'paid'
+                      order.paymentStatus === 'PAID'
                         ? 'text-green-600'
-                        : order.paymentStatus === 'refunded'
+                        : order.paymentStatus === 'REFUNDED'
                         ? 'text-gray-600'
                         : 'text-red-600'
                     }`}

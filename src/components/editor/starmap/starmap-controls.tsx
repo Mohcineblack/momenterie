@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useStarMapStore, STARMAP_STYLES } from '@/store/starmap-store';
+import { useStarMapStore } from '@/store/starmap-store';
+import { STARMAP_STYLES } from '@/lib/render/styles';
 import { Calendar, Clock, MapPin, Type, Star, Grid3x3 } from 'lucide-react';
 import { geocodeLocation } from '@/lib/mapbox';
 import { toast } from 'sonner';

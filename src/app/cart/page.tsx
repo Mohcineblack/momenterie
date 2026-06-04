@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCartStore } from '@/store/cart-store';
-import { formatPrice } from '@/lib/utils';
+import { calculateShippingCost, calculateTax, formatPrice } from '@/lib/utils';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
-import { Metadata } from 'next';
 
 export default function CartPage() {
   const {
@@ -31,8 +30,9 @@ export default function CartPage() {
   }
 
   const subtotal = getTotalPrice();
-  const shipping = subtotal >= 50 ? 0 : 4.95;
-  const tax = subtotal * 0.19; // 19% VAT (Germany)
+  const shippingCountry = 'DE';
+  const shipping = calculateShippingCost(shippingCountry, subtotal);
+  const tax = calculateTax(subtotal, shippingCountry);
   const total = subtotal + shipping + tax;
 
   if (items.length === 0) {
@@ -195,7 +195,7 @@ export default function CartPage() {
                 </div>
 
                 <div className="flex justify-between text-gray-700">
-                  <span>Tax (19%)</span>
+                  <span>VAT</span>
                   <span>{formatPrice(tax)}</span>
                 </div>
 
@@ -208,15 +208,15 @@ export default function CartPage() {
               </div>
 
               {/* Free Shipping Progress */}
-              {subtotal < 50 && (
+              {subtotal < 5000 && (
                 <div className="mb-6 p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-900 mb-2">
-                    Add {formatPrice(50 - subtotal)} more for <strong>free shipping</strong>!
+                    Add {formatPrice(5000 - subtotal)} more for <strong>free shipping</strong>!
                   </p>
                   <div className="h-2 bg-blue-200 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-blue-600 transition-all duration-300"
-                      style={{ width: `${(subtotal / 50) * 100}%` }}
+                      style={{ width: `${(subtotal / 5000) * 100}%` }}
                     />
                   </div>
                 </div>

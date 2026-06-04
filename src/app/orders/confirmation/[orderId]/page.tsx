@@ -4,10 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { formatPrice, formatDate } from "@/lib/utils";
+import { OrderStatusPoller } from "@/components/checkout/order-status-poller";
 import { CheckCircle2, Package, Truck, Mail, ArrowRight } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ orderId: string }>;
+  searchParams: Promise<{ payment_intent_client_secret?: string }>;
 }
 
 export const metadata: Metadata = {
@@ -15,8 +17,9 @@ export const metadata: Metadata = {
   description: "Thank you for your order!",
 };
 
-export default async function OrderConfirmationPage({ params }: PageProps) {
+export default async function OrderConfirmationPage({ params, searchParams }: PageProps) {
   const { orderId } = await params;
+  const { payment_intent_client_secret: paymentIntentClientSecret } = await searchParams;
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
@@ -45,9 +48,11 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
             <CheckCircle2 className="w-12 h-12 text-green-600" />
           </div>
           <h1 className="text-4xl font-bold mb-4">Thank You for Your Order!</h1>
-          <p className="text-xl text-gray-600 mb-2">
-            Your order has been received and is being processed.
-          </p>
+          <OrderStatusPoller
+            orderId={order.id}
+            initialPaymentStatus={order.paymentStatus}
+            paymentIntentClientSecret={paymentIntentClientSecret}
+          />
           <p className="text-gray-600">
             Order number:{" "}
             <span className="font-semibold text-gray-900">

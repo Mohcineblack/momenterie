@@ -1,6 +1,7 @@
 'use client';
 
-import { useCityMapStore, MAP_STYLES } from '@/store/citymap-store';
+import { useCityMapStore } from '@/store/citymap-store';
+import { MAP_STYLES } from '@/lib/render/styles';
 import { Calendar, Type, MapPin } from 'lucide-react';
 
 export function EditorControls() {

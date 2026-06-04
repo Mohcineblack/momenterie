@@ -5,6 +5,7 @@ import { useDropzone } from "react-dropzone";
 import { usePuzzleStore } from "@/store/puzzle-store";
 import { Upload, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { validatePrintImageResolution } from "@/lib/image-validation";
 
 export function PuzzleUploader() {
   const {
@@ -34,6 +35,14 @@ export function PuzzleUploader() {
       }
 
       try {
+        const resolution = await validatePrintImageResolution(file);
+        if (!resolution.valid) {
+          toast.error(
+            `Image is too small (${resolution.width}x${resolution.height}px). Please use at least 2000x2000px.`
+          );
+          return;
+        }
+
         setIsUploading(true);
         setUploadProgress(0);
 

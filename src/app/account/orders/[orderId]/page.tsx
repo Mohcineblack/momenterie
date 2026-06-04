@@ -41,13 +41,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   const getStatusStep = (status: string): number => {
     switch (status) {
-      case 'pending':
+      case 'PENDING':
         return 1;
-      case 'processing':
+      case 'PROCESSING':
+      case 'IN_PRODUCTION':
         return 2;
-      case 'shipped':
+      case 'SHIPPED':
         return 3;
-      case 'delivered':
+      case 'DELIVERED':
         return 4;
       default:
         return 0;
