@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "FUL-3: Submit order to Prodigi via Trigger.dev task (sandbox). Transform the existing no-op notifyPrintPartner task into a real Prodigi order submission. Includes FUL-4: status sync via a polling task.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Step 1 - Create src/lib/fulfillment/prodigi-client.ts: A typed HTTP client for Prodigi's REST API. Functions: submitOrder(payload: ProdigiOrderPayload): Promise<ProdigiOrderResponse> that POSTs to /v4.0/Orders. getOrder(prodigiOrderId: string): Promise<ProdigiOrderStatusResponse> that GETs /v4.0/Orders/{id}. Both use fetch with Authorization header (Bearer + API key). Type definitions for request/response payloads based on Prodigi API docs. Include proper error handling with typed error responses.",
     "Step 2 - Rewrite src/trigger/order-tasks.ts notifyPrintPartner task: Rename to submitToProdigiTask (keep id 'notify-print-partner' for backward compat or update it to 'submit-to-prodigi'). Implementation: (a) Load order with items, variants, shippingAddress. (b) Guard: if order.prodigiOrderId is already set, return early (idempotency). (c) For each item: resolve Prodigi SKU via sku-mapping, get presigned URL via presign helper. (d) Build Prodigi order payload with shipping address, items, and merchant reference. (e) Call prodigi-client.submitOrder(). (f) On success: update Order with prodigiOrderId and supplierCostCents. (g) On failure: update Order.fulfillmentError with the error message, do NOT advance status. Use the existing idempotencyKey pattern from the trigger call site.",
@@ -28,5 +28,5 @@
     "npm run build"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All verification passed: typecheck, lint (0 errors), all 155 tests pass (18 suites), and build succeeds. The task mock pattern for tests requires casting the imported task to `any` then accessing `.run` since the Trigger.dev Task type does not expose run publicly. Used `mockResolvedValue` (not `mockResolvedValueOnce`) when a test has multiple expect().rejects.toThrow() calls against the same mock. The submitToProdigiTask uses task id 'submit-to-prodigi' (changed from 'notify-print-partner') and the trigger call in renderOrderItem was updated accordingly."
 }
