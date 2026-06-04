@@ -197,6 +197,13 @@ model Order {
   trackingNumber  String?
   notes           String?
 
+  prodigiOrderId  String?     @unique
+  supplierCostCents Int?
+  carrier         String?
+  trackingUrl     String?
+  shippedAt       DateTime?
+  fulfillmentError String?
+
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }

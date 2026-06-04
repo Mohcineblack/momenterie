@@ -22,6 +22,7 @@ function walk(dir: string): string[] {
     const full = path.join(dir, entry);
     const stat = statSync(full);
     if (stat.isDirectory()) {
+      if (entry === "__tests__") return [];
       return walk(full);
     }
     return full.endsWith(".ts") || full.endsWith(".tsx") ? [full] : [];
