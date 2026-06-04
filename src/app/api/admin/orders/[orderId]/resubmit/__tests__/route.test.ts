@@ -156,4 +156,48 @@ describe("POST /api/admin/orders/[orderId]/resubmit", () => {
       })
     );
   });
+
+  it("restores previous state when trigger call fails", async () => {
+    (auth as jest.Mock).mockResolvedValue({
+      user: { id: "admin-1", role: "admin" },
+    });
+    (prisma.order.findUnique as jest.Mock).mockResolvedValue({
+      id: "order-1",
+      status: "IN_PRODUCTION",
+      paymentStatus: "PAID",
+      fulfillmentError: "Previous error",
+      prodigiOrderId: "ord_old_123",
+      items: [{ id: "item-1", productionFileUrl: "r2://bucket/key.pdf" }],
+    });
+    (prisma.order.update as jest.Mock).mockResolvedValue({});
+
+    const { submitToProdigiTask } = require("@/trigger/order-tasks");
+    submitToProdigiTask.trigger.mockRejectedValueOnce(
+      new Error("Trigger.dev service unavailable")
+    );
+
+    const response = await POST(makeRequest("order-1"), makeParams("order-1"));
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.success).toBe(false);
+    expect(body.error).toBe("Failed to trigger resubmission task");
+
+    // Verify order was first cleared, then restored
+    expect(prisma.order.update).toHaveBeenCalledTimes(2);
+    expect(prisma.order.update).toHaveBeenNthCalledWith(1, {
+      where: { id: "order-1" },
+      data: {
+        fulfillmentError: null,
+        prodigiOrderId: null,
+      },
+    });
+    expect(prisma.order.update).toHaveBeenNthCalledWith(2, {
+      where: { id: "order-1" },
+      data: {
+        prodigiOrderId: "ord_old_123",
+        fulfillmentError: "Resubmit trigger failed: Trigger.dev service unavailable",
+      },
+    });
+  });
 });

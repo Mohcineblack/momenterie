@@ -190,7 +190,10 @@ export const submitToProdigiTask = task({
         items: prodigiItems,
       });
 
-      // Extract cost from first charge (total cost in minor units)
+      // Extract cost from first charge (total cost in minor units).
+      // NOTE: supplierCostCents is in Prodigi's billing currency (typically GBP
+      // for EU production), NOT necessarily the store's display currency. The admin
+      // should be aware that this value may differ from the customer-facing order total.
       let supplierCostCents: number | null = null;
       if (result.order.charges && result.order.charges.length > 0) {
         const costAmount = parseFloat(

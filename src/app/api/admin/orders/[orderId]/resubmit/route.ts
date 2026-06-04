@@ -69,6 +69,9 @@ export async function POST(
       );
     }
 
+    // Store previous prodigiOrderId in case we need to restore it
+    const previousProdigiOrderId = order.prodigiOrderId;
+
     // Clear fulfillment error and prodigiOrderId for clean re-submission
     await prisma.order.update({
       where: { id: orderId },
@@ -78,11 +81,32 @@ export async function POST(
       },
     });
 
-    // Trigger the submit-to-prodigi task
-    await submitToProdigiTask.trigger(
-      { orderId },
-      { idempotencyKey: `resubmit-prodigi-${orderId}-${Date.now()}` }
-    );
+    // Trigger the submit-to-prodigi task; if this fails, restore previous state
+    // to avoid leaving the order in limbo with cleared fields and no pending task.
+    try {
+      await submitToProdigiTask.trigger(
+        { orderId },
+        { idempotencyKey: `resubmit-prodigi-${orderId}-${Date.now()}` }
+      );
+    } catch (triggerError: unknown) {
+      const triggerMessage =
+        triggerError instanceof Error
+          ? triggerError.message
+          : "Unknown trigger error";
+
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          prodigiOrderId: previousProdigiOrderId,
+          fulfillmentError: `Resubmit trigger failed: ${triggerMessage}`,
+        },
+      });
+
+      return NextResponse.json(
+        { success: false, error: "Failed to trigger resubmission task" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

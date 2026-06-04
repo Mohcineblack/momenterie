@@ -44,7 +44,7 @@ describe("getPresignedProductionUrl", () => {
           Key: "orders/abc123/item-1.pdf",
         },
       }),
-      { expiresIn: 6 * 60 * 60 }
+      { expiresIn: 24 * 60 * 60 }
     );
   });
 
