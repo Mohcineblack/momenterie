@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Package, MapPin, CreditCard } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { OrderStatusUpdater } from '@/components/admin/order-status-updater';
+import { FulfillmentPanel } from '@/components/admin/fulfillment-panel';
 
 interface PageProps {
   params: Promise<{ orderId: string }>;
@@ -204,6 +205,26 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                 )}
               </div>
             </div>
+
+            {/* Fulfillment Panel */}
+            {(order.status === 'IN_PRODUCTION' ||
+              order.status === 'SHIPPED' ||
+              order.status === 'DELIVERED' ||
+              order.prodigiOrderId ||
+              order.fulfillmentError) && (
+              <FulfillmentPanel
+                order={{
+                  id: order.id,
+                  status: order.status,
+                  prodigiOrderId: order.prodigiOrderId,
+                  supplierCostCents: order.supplierCostCents,
+                  carrier: order.carrier,
+                  trackingUrl: order.trackingUrl,
+                  shippedAt: order.shippedAt ? order.shippedAt.toISOString() : null,
+                  fulfillmentError: order.fulfillmentError,
+                }}
+              />
+            )}
 
             {/* Shipping Address */}
             <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
