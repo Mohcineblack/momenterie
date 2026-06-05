@@ -51,7 +51,8 @@ function CityMapEditorPage() {
     setSearchQuery(query);
     if (!query.trim()) { setSearchResults([]); setShowResults(false); return; }
     try {
-      const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&limit=5`);
+      const proximity = location ? `${location.lng},${location.lat}` : "2.3522,48.8566";
+      const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&limit=5&language=fr&types=place,locality,neighborhood,poi,address&proximity=${proximity}`);
       const data = await res.json();
       if (data.features) { setSearchResults(data.features); setShowResults(true); }
     } catch {}
