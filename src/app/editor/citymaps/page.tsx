@@ -3,16 +3,14 @@
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CityMapEditor as CityMapEditorComponent } from "@/components/editor/citymap/citymap-editor";
-import { CityMapPreview } from "@/components/editor/citymap/citymap-preview";
-import { EditorControls } from "@/components/editor/citymap/editor-controls";
-import { FrameUpsell } from "@/components/editor/frame-upsell";
 import { useCityMapStore } from "@/store/citymap-store";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cart-store";
 import { formatPrice } from "@/lib/utils";
 import type { CitymapSpec } from "@/lib/render/spec";
-import { ArrowLeft, ShoppingBag } from "lucide-react";
-import Link from "next/link";
+import { MapPin, Palette, Type, ArrowRight, ZoomIn, ZoomOut } from "lucide-react";
+import { MAP_STYLES } from "@/lib/render/styles";
+import { FrameUpsell } from "@/components/editor/frame-upsell";
 
 function CityMapEditorPage() {
   const router = useRouter();
@@ -20,7 +18,7 @@ function CityMapEditorPage() {
   const productSlug = searchParams.get("product");
 
   const { addItem } = useCartStore();
-  const { location, title, subtitle, date, mapStyle, zoom, resetEditor } = useCityMapStore();
+  const { location, title, subtitle, date, mapStyle, zoom, setTitle, setSubtitle, setDate, setMapStyle, setZoom } = useCityMapStore();
 
   const [mounted, setMounted] = useState(false);
   const [product, setProduct] = useState<any>(null);
@@ -68,71 +66,137 @@ function CityMapEditorPage() {
     });
 
     toast.success("Added to cart!");
-    localStorage.removeItem("citymap-editor-draft");
     resetEditor();
     router.push("/cart");
   };
 
-  if (!mounted) return <div className="min-h-screen flex items-center justify-center bg-surface"><p className="font-sans text-on-surface-variant">Loading editor...</p></div>;
+  const { resetEditor } = useCityMapStore();
+
+  if (!mounted) return <div className="min-h-screen flex items-center justify-center bg-surface"><p className="font-sans text-on-surface-variant">Loading...</p></div>;
 
   const currentPrice = product ? product.basePrice + (selectedVariant?.priceModifier || 0) : 0;
 
+  const formatCoords = (lat: number, lng: number) =>
+    `${Math.abs(lat).toFixed(4)}\u00b0 ${lat >= 0 ? "N" : "S"}, ${Math.abs(lng).toFixed(4)}\u00b0 ${lng >= 0 ? "E" : "W"}`;
+
   return (
-    <div className="flex flex-col min-h-screen bg-surface md:flex-row -mt-[72px] pt-[72px]">
-      {/* Mobile header */}
-      <div className="md:hidden flex items-center justify-between p-4 border-b border-outline-variant">
-        <Link href={`/products/${productSlug || "custom-city-map"}`} className="text-on-surface-variant hover:text-primary">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <span className="font-serif font-medium text-primary">City Map Studio</span>
-        <div className="w-5" />
-      </div>
-
-      {/* Left: The poster frame with the map INSIDE it */}
-      <div className="flex-1 flex flex-col items-center justify-start bg-surface-container-lowest p-6 md:p-12 overflow-y-auto">
-        <div className="hidden md:flex items-center self-start mb-6">
-          <Link href={`/products/${productSlug || "custom-city-map"}`} className="flex items-center gap-2 text-on-surface-variant hover:text-primary text-sm font-sans tracking-wide">
-            <ArrowLeft className="w-4 h-4" /> Back to Product
-          </Link>
-        </div>
-
-        {/* The poster frame — map is rendered inside */}
-        <div className="w-full max-w-[480px] border border-outline-variant shadow-2xl bg-white">
-          {/* Map area (interactive — user drags to position) */}
-          <div className="relative w-full" style={{ aspectRatio: "1/1" }}>
+    <div className="flex flex-col lg:flex-row min-h-screen bg-surface -mt-[72px] pt-[72px]">
+      {/* Left: Poster frame with map inside */}
+      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-12 bg-surface-container-lowest relative">
+        {/* The poster */}
+        <div className="w-full max-w-[560px] bg-white border border-outline-variant shadow-xl">
+          {/* Map area */}
+          <div className="relative w-full" style={{ aspectRatio: "4/5" }}>
             <CityMapEditorComponent />
           </div>
 
-          {/* Text area below the map (title, subtitle, coordinates) */}
-          <div className="px-6 py-8 text-center bg-white border-t border-outline-variant">
-            <h2 className="font-serif text-2xl md:text-3xl font-bold text-primary uppercase tracking-widest mb-1">
-              {title || location?.placeName || "YOUR TITLE"}
+          {/* Title area below map */}
+          <div className="px-6 py-6 text-center border-t border-outline-variant bg-white">
+            <h2 className="font-serif text-2xl md:text-3xl font-bold text-primary uppercase tracking-[0.15em]">
+              {title || "PARIS"}
             </h2>
-            {(subtitle || date) && (
-              <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
-                {subtitle || date}
-              </p>
-            )}
-            {location && (
-              <p className="font-mono text-[9px] text-on-surface-variant mt-2 tracking-wider opacity-60">
-                {Math.abs(location.lat).toFixed(4)}° {location.lat >= 0 ? "N" : "S"} · {Math.abs(location.lng).toFixed(4)}° {location.lng >= 0 ? "E" : "W"}
-              </p>
-            )}
+            <p className="font-sans text-[10px] mt-2 text-on-surface-variant tracking-[0.15em]">
+              {subtitle || (location ? formatCoords(location.lat, location.lng) : "")}
+            </p>
           </div>
+        </div>
+
+        {/* Zoom controls */}
+        <div className="absolute right-8 bottom-1/3 flex flex-col gap-2">
+          <button onClick={() => setZoom(Math.min(zoom + 1, 18))} className="w-10 h-10 bg-white border border-outline-variant flex items-center justify-center text-primary hover:bg-surface-dim transition-colors">
+            <ZoomIn className="w-4 h-4" />
+          </button>
+          <button onClick={() => setZoom(Math.max(zoom - 1, 8))} className="w-10 h-10 bg-white border border-outline-variant flex items-center justify-center text-primary hover:bg-surface-dim transition-colors">
+            <ZoomOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      {/* Right: Controls panel */}
-      <div className="w-full md:w-[420px] lg:w-[460px] bg-surface border-t md:border-t-0 md:border-l border-outline-variant flex flex-col max-h-screen overflow-hidden">
-        <div className="p-6 md:p-8 border-b border-outline-variant">
-          <h1 className="font-serif text-2xl font-medium text-primary mb-1">Design Your Map</h1>
-          <p className="font-sans text-sm text-on-surface-variant">Customize location, text, and style.</p>
-        </div>
+      {/* Right: Controls */}
+      <div className="w-full lg:w-[420px] xl:w-[460px] bg-surface border-t lg:border-t-0 lg:border-l border-outline-variant flex flex-col">
+        <div className="flex-1 overflow-y-auto p-8 lg:p-10 space-y-10">
+          {/* Header */}
+          <div>
+            <h1 className="font-serif text-3xl italic font-medium text-primary">Personalize</h1>
+            <p className="font-sans text-sm text-on-surface-variant mt-1">Curating your moment</p>
+          </div>
 
-        {/* All controls */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
-          <EditorControls />
+          {/* 1. Location */}
+          <div>
+            <h3 className="flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.15em] font-bold text-primary mb-4">
+              <MapPin className="w-4 h-4" /> 1. Location
+            </h3>
+            <div className="bg-surface-container-lowest border border-outline-variant px-4 py-3">
+              <p className="font-sans text-sm text-primary">
+                {location ? location.placeName : "Search for a location on the map"}
+              </p>
+            </div>
+            {location && (
+              <div className="flex justify-between mt-2">
+                <span className="font-sans text-xs text-on-surface-variant">Center Coordinates</span>
+                <span className="font-sans text-xs font-semibold text-primary">{formatCoords(location.lat, location.lng)}</span>
+              </div>
+            )}
+          </div>
 
+          {/* 2. Style */}
+          <div>
+            <h3 className="flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.15em] font-bold text-primary mb-4">
+              <Palette className="w-4 h-4" /> 2. Style
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              {MAP_STYLES.map((style) => (
+                <button
+                  key={style.id}
+                  onClick={() => setMapStyle(style)}
+                  className={`relative aspect-square border-2 transition-colors ${
+                    mapStyle.id === style.id ? "border-primary" : "border-outline-variant hover:border-on-surface-variant"
+                  }`}
+                >
+                  <div className="w-full h-full" style={{ backgroundColor: style.colors.land }}>
+                    <div className="absolute inset-2 opacity-60" style={{ background: `linear-gradient(135deg, ${style.colors.roads} 1px, transparent 1px), linear-gradient(45deg, ${style.colors.majorRoads} 1px, transparent 1px)`, backgroundSize: "8px 8px" }} />
+                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1/2 h-1" style={{ backgroundColor: style.colors.text }} />
+                  </div>
+                  {mapStyle.id === style.id && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-on-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 3. Text */}
+          <div>
+            <h3 className="flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.15em] font-bold text-primary mb-4">
+              <Type className="w-4 h-4" /> 3. Text
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="font-sans text-[10px] uppercase tracking-[0.15em] font-bold text-primary block mb-2">Title</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Paris"
+                  className="w-full bg-surface-container-lowest border border-outline-variant px-4 py-3 font-sans text-sm text-primary focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+              <div>
+                <label className="font-sans text-[10px] uppercase tracking-[0.15em] font-bold text-primary block mb-2">Subtitle (coordinates/tagline)</label>
+                <input
+                  type="text"
+                  value={subtitle}
+                  onChange={(e) => setSubtitle(e.target.value)}
+                  placeholder={location ? formatCoords(location.lat, location.lng) : "48\u00b0 51' 29\" N 2\u00b0 17' 40\" E"}
+                  className="w-full bg-surface-container-lowest border border-outline-variant px-4 py-3 font-sans text-sm text-primary focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Frame upsell */}
           {product && selectedVariant && (
             <div className="pt-6 border-t border-outline-variant">
               <FrameUpsell
@@ -146,17 +210,20 @@ function CityMapEditorPage() {
           )}
         </div>
 
-        {/* Footer CTA */}
-        <div className="p-6 md:p-8 bg-surface-container-low border-t border-outline-variant">
-          <div className="flex items-center justify-between mb-4">
-            <span className="font-serif text-xl font-medium text-primary">Total</span>
-            <span className="font-sans text-xl font-semibold text-primary">{formatPrice(currentPrice)}</span>
+        {/* Footer: Price + CTA */}
+        <div className="p-8 lg:p-10 border-t border-outline-variant bg-surface">
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <span className="font-sans text-[10px] uppercase tracking-[0.15em] font-bold text-on-surface-variant block">Total</span>
+              <span className="font-serif text-3xl font-medium text-primary">{formatPrice(currentPrice)}</span>
+            </div>
+            <span className="font-sans text-xs text-on-surface-variant">Free global shipping</span>
           </div>
           <button
             onClick={handleAddToCart}
-            className="flex items-center justify-center w-full gap-2 bg-primary text-on-primary py-4 font-sans text-[11px] uppercase tracking-[0.1em] font-semibold hover:bg-secondary transition-colors shadow-md"
+            className="flex items-center justify-center w-full gap-2 bg-primary text-on-primary py-4 font-sans text-[11px] uppercase tracking-[0.15em] font-bold hover:bg-secondary transition-colors group"
           >
-            <ShoppingBag className="w-4 h-4" /> Add to Cart
+            Add to Cart <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>
