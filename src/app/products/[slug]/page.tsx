@@ -10,6 +10,7 @@ import { formatPrice } from "@/lib/utils";
 import { getEditorRoute } from "@/lib/editor-routes";
 import { Star, ShieldCheck, Truck } from "lucide-react";
 import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/shipping-config";
+import { ProductImagePlaceholder } from "@/components/ui/product-image-placeholder";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -96,7 +97,7 @@ export default async function ProductPage({ params }: PageProps) {
         {/* Left: Gallery */}
         <div className="flex flex-col gap-4">
           <div className="aspect-[4/5] bg-surface-container relative overflow-hidden border border-outline-variant p-2">
-            {product.images[0] && (
+            {product.images[0] ? (
               <Image
                 src={product.images[0]}
                 alt={product.name}
@@ -104,6 +105,8 @@ export default async function ProductPage({ params }: PageProps) {
                 className="object-cover object-center"
                 priority
               />
+            ) : (
+              <ProductImagePlaceholder />
             )}
           </div>
           {product.images.length > 1 && (
