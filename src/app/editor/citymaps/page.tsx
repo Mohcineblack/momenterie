@@ -4,14 +4,15 @@ import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CityMapEditor as CityMapEditorComponent } from "@/components/editor/citymap/citymap-editor";
 import { CityMapPreview } from "@/components/editor/citymap/citymap-preview";
-import { EditorHeader } from "@/components/editor/editor-header";
 import { EditorControls } from "@/components/editor/citymap/editor-controls";
 import { FrameUpsell } from "@/components/editor/frame-upsell";
 import { useCityMapStore } from "@/store/citymap-store";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cart-store";
+import { formatPrice } from "@/lib/utils";
 import type { CitymapSpec } from "@/lib/render/spec";
-import { Save, ShoppingCart } from "lucide-react";
+import { ArrowLeft, MapPin, Type, LayoutTemplate, ShoppingBag } from "lucide-react";
+import Link from "next/link";
 
 function CityMapEditorPage() {
   const router = useRouter();
@@ -19,233 +20,161 @@ function CityMapEditorPage() {
   const productSlug = searchParams.get("product");
 
   const { addItem } = useCartStore();
-  const { location, title, subtitle, date, mapStyle, zoom, resetEditor } =
-    useCityMapStore();
+  const { location, title, subtitle, date, mapStyle, zoom, resetEditor } = useCityMapStore();
 
   const [mounted, setMounted] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [product, setProduct] = useState<any>(null);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
-  const [frameColor, setFrameColor] = useState('black');
+  const [frameColor, setFrameColor] = useState("black");
+  const [activeTab, setActiveTab] = useState<"location" | "text" | "style">("location");
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  // Fetch product data
   useEffect(() => {
     if (!productSlug) return;
-
     fetch(`/api/products/${productSlug}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data) {
           setProduct(data.data);
-          // Set default variant (first one or cheapest)
-          if (data.data.variants && data.data.variants.length > 0) {
-            const sortedVariants = [...data.data.variants].sort(
-              (a, b) => a.priceModifier - b.priceModifier
-            );
-            setSelectedVariant(sortedVariants[0]);
+          if (data.data.variants?.length > 0) {
+            const sorted = [...data.data.variants].sort((a: any, b: any) => a.priceModifier - b.priceModifier);
+            setSelectedVariant(sorted[0]);
           }
         }
       })
-      .catch((error) => {
-        console.error("Failed to load product:", error);
-        toast.error("Failed to load product information");
-      });
+      .catch(() => toast.error("Failed to load product"));
   }, [productSlug]);
 
-  useEffect(() => {
-    // Load saved state from localStorage if available
-    const savedState = localStorage.getItem("citymap-editor-draft");
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
-        // Restore state through store actions
-      } catch (error) {
-        console.error("Failed to load saved state:", error);
-      }
-    }
-  }, []);
+  const handleAddToCart = () => {
+    if (!location) { toast.error("Please select a location"); return; }
+    if (!title) { toast.error("Please enter a title"); return; }
+    if (!product || !selectedVariant) { toast.error("Product not loaded"); return; }
 
-  const handleSaveDraft = async () => {
-    setIsSaving(true);
-    try {
-      const state = useCityMapStore.getState();
-      localStorage.setItem(
-        "citymap-editor-draft",
-        JSON.stringify({
-          location: state.location,
-          title: state.title,
-          subtitle: state.subtitle,
-          date: state.date,
-          mapStyle: state.mapStyle,
-          zoom: state.zoom,
-        })
-      );
-      toast.success("Draft saved successfully");
-    } catch (error) {
-      toast.error("Failed to save draft");
-    } finally {
-      setIsSaving(false);
-    }
+    const customizationData: CitymapSpec = {
+      productType: "citymap",
+      location, zoom, bearing: 0,
+      mapStyleId: mapStyle.id, title, subtitle, date,
+      showCoordinates: true, markers: [], photoUrls: [],
+      size: selectedVariant.size || "30x40",
+      material: (selectedVariant.material || "poster").toLowerCase(),
+      ...(selectedVariant.material === "Framed" && { frameColor }),
+    };
+
+    addItem({
+      productId: product.id, productName: product.name, productSlug: product.slug,
+      variantId: selectedVariant.id, variantName: selectedVariant.name,
+      quantity: 1, basePrice: product.basePrice, variantPrice: selectedVariant.priceModifier,
+      customizationData,
+    });
+
+    toast.success("Added to cart!");
+    localStorage.removeItem("citymap-editor-draft");
+    resetEditor();
+    router.push("/cart");
   };
 
-  const handleAddToCart = async () => {
-    if (!location) {
-      toast.error("Please select a location on the map");
-      return;
-    }
+  if (!mounted) return <div className="min-h-screen flex items-center justify-center bg-surface"><p className="font-sans text-on-surface-variant">Loading editor...</p></div>;
 
-    if (!title) {
-      toast.error("Please enter a title for your map");
-      return;
-    }
-
-    if (!product || !selectedVariant) {
-      toast.error("Product information is not loaded yet");
-      return;
-    }
-
-    try {
-      const customizationData: CitymapSpec = {
-        productType: "citymap",
-        location,
-        zoom,
-        bearing: 0,
-        mapStyleId: mapStyle.id,
-        title,
-        subtitle,
-        date,
-        showCoordinates: true,
-        markers: [],
-        photoUrls: [],
-        size: selectedVariant.size || "30x40",
-        material: (selectedVariant.material || "poster").toLowerCase(),
-        ...(selectedVariant.material === 'Framed' && { frameColor }),
-      };
-
-      addItem({
-        productId: product.id,
-        productName: product.name,
-        productSlug: product.slug,
-        variantId: selectedVariant.id,
-        variantName: selectedVariant.name,
-        quantity: 1,
-        basePrice: product.basePrice,
-        variantPrice: selectedVariant.priceModifier,
-        customizationData,
-      });
-
-      toast.success("Added to cart!");
-
-      // Clear draft and reset editor
-      localStorage.removeItem("citymap-editor-draft");
-      resetEditor();
-
-      // Redirect to cart
-      router.push("/cart");
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      toast.error("Failed to add to cart");
-    }
-  };
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-gray-300 border-t-gray-900 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading editor...</p>
-        </div>
-      </div>
-    );
-  }
+  const currentPrice = product ? product.basePrice + (selectedVariant?.priceModifier || 0) : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <EditorHeader
-        title="City Map Editor"
-        onSave={handleSaveDraft}
-        onAddToCart={handleAddToCart}
-        isSaving={isSaving}
-      />
+    <div className="flex flex-col min-h-screen bg-surface md:flex-row -mt-[72px] pt-[72px]">
+      {/* Mobile header */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-outline-variant">
+        <Link href={`/products/${productSlug || "custom-city-map"}`} className="text-on-surface-variant hover:text-primary">
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        <span className="font-serif font-medium text-primary">City Map Studio</span>
+        <div className="w-5" />
+      </div>
 
-      {/* Main Editor Layout */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Column - Controls */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
-              <h2 className="text-xl font-bold mb-4">Customize Your Map</h2>
-              <EditorControls />
+      {/* Left: Preview area */}
+      <div className="flex-1 relative flex flex-col bg-surface-container-lowest">
+        <div className="absolute top-4 left-4 z-10 hidden md:block">
+          <Link href={`/products/${productSlug || "custom-city-map"}`} className="flex items-center gap-2 text-on-surface-variant hover:text-primary text-sm font-sans tracking-wide">
+            <ArrowLeft className="w-4 h-4" /> Back to Product
+          </Link>
+        </div>
 
-              {/* Frame Upsell */}
-              {product && selectedVariant && (
-                <div className="mt-6">
-                  <FrameUpsell
-                    variants={product.variants}
-                    selectedVariant={selectedVariant}
-                    basePrice={product.basePrice}
-                    onVariantChange={setSelectedVariant}
-                    onFrameColorChange={setFrameColor}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Map Editor */}
+        <div className="flex-1 relative" style={{ minHeight: "400px" }}>
+          <CityMapEditorComponent />
+        </div>
 
-          {/* Right Column - Map Editor & Preview */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Interactive Map Editor */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="p-4 border-b">
-                <h3 className="font-semibold">Map Position</h3>
-                <p className="text-sm text-gray-600">
-                  Search for a location and adjust the map to your preferred
-                  view
-                </p>
-              </div>
-              <div className="relative" style={{ height: "500px" }}>
-                <CityMapEditorComponent />
-              </div>
-            </div>
-
-            {/* Preview Card */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="p-4 border-b">
-                <h3 className="font-semibold">Preview</h3>
-                <p className="text-sm text-gray-600">
-                  This is how your final print will look
-                </p>
-              </div>
-              <div className="p-6 bg-gray-50">
-                <CityMapPreview />
-              </div>
-            </div>
+        {/* Preview */}
+        <div className="p-6 bg-surface border-t border-outline-variant">
+          <div className="max-w-[300px] mx-auto">
+            <CityMapPreview />
           </div>
         </div>
       </div>
 
-      {/* Mobile Footer Actions */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4">
-        <div className="flex gap-3">
-          <button
-            onClick={handleSaveDraft}
-            disabled={isSaving}
-            className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-900 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            <Save className="w-5 h-5" />
-            Save Draft
-          </button>
+      {/* Right: Controls panel */}
+      <div className="w-full md:w-[450px] lg:w-[500px] bg-surface border-t md:border-t-0 md:border-l border-outline-variant flex flex-col max-h-screen overflow-hidden">
+        <div className="p-6 md:p-8 border-b border-outline-variant">
+          <h1 className="font-serif text-2xl font-medium text-primary mb-2">Design Your Map</h1>
+          <p className="font-sans text-sm text-on-surface-variant">Customize location, text, and style.</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-outline-variant">
+          {([
+            { key: "location", icon: MapPin, label: "Location" },
+            { key: "text", icon: Type, label: "Text" },
+            { key: "style", icon: LayoutTemplate, label: "Style" },
+          ] as const).map(({ key, icon: Icon, label }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex-1 flex flex-col items-center justify-center p-4 gap-2 font-sans text-xs uppercase tracking-wider font-semibold transition-colors ${
+                activeTab === key ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:bg-surface-container-lowest"
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-8">
+          {activeTab === "location" && (
+            <div className="space-y-6">
+              <EditorControls />
+            </div>
+          )}
+          {activeTab === "text" && (
+            <div className="space-y-6">
+              <EditorControls />
+            </div>
+          )}
+          {activeTab === "style" && (
+            <div className="space-y-6">
+              {product && selectedVariant && (
+                <FrameUpsell
+                  variants={product.variants}
+                  selectedVariant={selectedVariant}
+                  basePrice={product.basePrice}
+                  onVariantChange={setSelectedVariant}
+                  onFrameColorChange={setFrameColor}
+                />
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer CTA */}
+        <div className="p-6 md:p-8 bg-surface-container-low border-t border-outline-variant">
+          <div className="flex items-center justify-between mb-6">
+            <span className="font-serif text-xl font-medium text-primary">Total</span>
+            <span className="font-sans text-xl font-semibold text-primary">{formatPrice(currentPrice)}</span>
+          </div>
           <button
             onClick={handleAddToCart}
-            className="flex-1 px-4 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+            className="flex items-center justify-center w-full gap-2 bg-primary text-on-primary py-4 font-sans text-xs uppercase tracking-[0.1em] font-semibold hover:bg-secondary transition-colors shadow-md"
           >
-            <ShoppingCart className="w-5 h-5" />
-            Add to Cart
+            <ShoppingBag className="w-4 h-4" /> Add to Cart
           </button>
         </div>
       </div>
@@ -255,7 +184,7 @@ function CityMapEditorPage() {
 
 export default function CityMapEditorPageWrapper() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="font-sans text-on-surface-variant">Loading...</p></div>}>
       <CityMapEditorPage />
     </Suspense>
   );
