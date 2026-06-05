@@ -8,9 +8,10 @@ import { toast } from "sonner";
 import { useCartStore } from "@/store/cart-store";
 import { formatPrice } from "@/lib/utils";
 import type { CitymapSpec } from "@/lib/render/spec";
-import { MapPin, Palette, Type, ArrowRight, ZoomIn, ZoomOut } from "lucide-react";
+import { MapPin, Palette, Type, ArrowRight, ZoomIn, ZoomOut, Search } from "lucide-react";
 import { MAP_STYLES } from "@/lib/render/styles";
 import { FrameUpsell } from "@/components/editor/frame-upsell";
+import mapboxgl from "mapbox-gl";
 
 function CityMapEditorPage() {
   const router = useRouter();
@@ -18,12 +19,15 @@ function CityMapEditorPage() {
   const productSlug = searchParams.get("product");
 
   const { addItem } = useCartStore();
-  const { location, title, subtitle, date, mapStyle, zoom, setTitle, setSubtitle, setDate, setMapStyle, setZoom } = useCityMapStore();
+  const { location, title, subtitle, date, mapStyle, zoom, setTitle, setSubtitle, setDate, setMapStyle, setZoom, setLocation } = useCityMapStore();
 
   const [mounted, setMounted] = useState(false);
   const [product, setProduct] = useState<any>(null);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [frameColor, setFrameColor] = useState("black");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showResults, setShowResults] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -42,6 +46,23 @@ function CityMapEditorPage() {
       })
       .catch(() => toast.error("Failed to load product"));
   }, [productSlug]);
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) { setSearchResults([]); setShowResults(false); return; }
+    try {
+      const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&limit=5`);
+      const data = await res.json();
+      if (data.features) { setSearchResults(data.features); setShowResults(true); }
+    } catch {}
+  };
+
+  const handleSelectLocation = (result: any) => {
+    const [lng, lat] = result.center;
+    setLocation({ lat, lng, placeName: result.place_name });
+    setSearchQuery(result.place_name);
+    setShowResults(false);
+  };
 
   const handleAddToCart = () => {
     if (!location) { toast.error("Please select a location"); return; }
@@ -126,10 +147,30 @@ function CityMapEditorPage() {
             <h3 className="flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.15em] font-bold text-primary mb-4">
               <MapPin className="w-4 h-4" /> 1. Location
             </h3>
-            <div className="bg-surface-container-lowest border border-outline-variant px-4 py-3">
-              <p className="font-sans text-sm text-primary">
-                {location ? location.placeName : "Search for a location on the map"}
-              </p>
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery || (location?.placeName ?? "")}
+                onChange={(e) => handleSearch(e.target.value)}
+                onFocus={() => searchResults.length > 0 && setShowResults(true)}
+                placeholder="Paris, France"
+                className="w-full bg-surface-container-lowest border border-outline-variant px-4 py-3 pr-10 font-sans text-sm text-primary focus:outline-none focus:border-primary transition-colors"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
+              {showResults && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-outline-variant shadow-lg z-20 max-h-48 overflow-y-auto">
+                  {searchResults.map((result: any) => (
+                    <button
+                      key={result.id}
+                      onClick={() => handleSelectLocation(result)}
+                      className="w-full px-4 py-3 text-left hover:bg-surface-dim border-b border-outline-variant last:border-0 transition-colors"
+                    >
+                      <p className="font-sans text-sm font-medium text-primary">{result.place_name.split(",")[0]}</p>
+                      <p className="font-sans text-xs text-on-surface-variant">{result.place_name.split(",").slice(1).join(",")}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             {location && (
               <div className="flex justify-between mt-2">

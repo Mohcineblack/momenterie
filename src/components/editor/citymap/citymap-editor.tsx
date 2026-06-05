@@ -255,58 +255,8 @@ export function CityMapEditor() {
 
   return (
     <div className="relative w-full h-full">
-      {/* Search Bar */}
-      <div className="absolute top-4 left-4 right-4 z-10">
-        <div className="relative bg-white rounded-lg shadow-lg">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                handleSearch(e.target.value);
-              }}
-              onFocus={() => searchResults.length > 0 && setShowResults(true)}
-              placeholder="Search for a location..."
-              className="w-full pl-12 pr-12 py-3 rounded-lg border-none focus:ring-2 focus:ring-gray-900"
-            />
-            {isSearching && (
-              <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 animate-spin" />
-            )}
-          </div>
-
-          {/* Search Results */}
-          {showResults && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-64 overflow-y-auto">
-              {searchResults.map((result) => (
-                <button
-                  key={result.id}
-                  onClick={() => handleSelectResult(result)}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
-                >
-                  <p className="text-sm font-medium text-gray-900">
-                    {result.place_name.split(',')[0]}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {result.place_name.split(',').slice(1).join(',')}
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Map Container */}
       <div ref={mapContainer} className="w-full h-full" />
-
-      {/* Instructions */}
-      {!location && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-full text-sm shadow-lg">
-          Click on the map or search for a location
-        </div>
-      )}
     </div>
   );
 }
