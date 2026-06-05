@@ -20,7 +20,7 @@ export function CityMapEditor() {
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
 
-  const { location, setLocation, setZoom, zoom } = useCityMapStore();
+  const { location, setLocation, setZoom, zoom, mapStyle } = useCityMapStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -41,6 +41,11 @@ export function CityMapEditor() {
 
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    // Apply style colors once map loads
+    map.current.on('style.load', () => {
+      applyStyleColors();
+    });
 
     // Add zoom change listener
     map.current.on('zoom', () => {
@@ -132,6 +137,38 @@ export function CityMapEditor() {
       });
     }
   }, [location]);
+
+  // Apply map style colors when style changes
+  useEffect(() => {
+    applyStyleColors();
+  }, [mapStyle.id]);
+
+  function applyStyleColors() {
+    const m = map.current;
+    if (!m || !m.isStyleLoaded()) return;
+
+    const colors = mapStyle.colors;
+    try {
+      m.setPaintProperty('background', 'background-color', colors.land);
+      m.getLayer('water') && m.setPaintProperty('water', 'fill-color', colors.water);
+
+      const roadLayers = ['road-street', 'road-minor', 'road-secondary-tertiary', 'road-simple'];
+      roadLayers.forEach(id => { m.getLayer(id) && m.setPaintProperty(id, 'line-color', colors.roads); });
+
+      const majorRoadLayers = ['road-primary', 'road-motorway-trunk', 'road-major-link'];
+      majorRoadLayers.forEach(id => { m.getLayer(id) && m.setPaintProperty(id, 'line-color', colors.majorRoads); });
+
+      m.getLayer('building') && m.setPaintProperty('building', 'fill-color', colors.buildings);
+
+      const landuseLayers = ['landuse', 'national-park', 'landcover'];
+      landuseLayers.forEach(id => { m.getLayer(id) && m.setPaintProperty(id, 'fill-color', colors.landuse); });
+
+      const labelLayers = m.getStyle()?.layers?.filter(l => l.type === 'symbol') || [];
+      labelLayers.forEach(l => {
+        try { m.setPaintProperty(l.id, 'text-color', colors.text); } catch {}
+      });
+    } catch {}
+  }
 
   // Search functionality
   const handleSearch = async (query: string) => {
