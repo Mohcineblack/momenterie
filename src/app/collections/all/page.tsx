@@ -1,207 +1,65 @@
-import { Metadata } from "next";
-import { Suspense } from "react";
-import { prisma } from "@/lib/prisma";
-import { ProductGrid } from "@/components/product/product-grid";
-import { ProductFilters } from "@/components/product/product-filters";
+import { prisma } from '@/lib/prisma';
+import Link from 'next/link';
+import Image from 'next/image';
+import { formatPrice } from '@/lib/utils';
+import { Star } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: "All Products - Momenterie",
-  description:
-    "Browse all personalized gifts and custom products at Momenterie",
-};
-
-interface PageProps {
-  searchParams: Promise<{
-    page?: string;
-    sortBy?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    search?: string;
-  }>;
-}
-
-export default async function AllProductsPage({ searchParams }: PageProps) {
-  const search = await searchParams;
-  const page = parseInt(search.page || "1", 10);
-  const sortBy = search.sortBy || "newest";
-  const minPrice = search.minPrice
-    ? parseFloat(search.minPrice)
-    : undefined;
-  const maxPrice = search.maxPrice
-    ? parseFloat(search.maxPrice)
-    : undefined;
-  const query = search.search;
-
-  // Build where clause
-  const where: any = {};
-
-  if (query) {
-    where.OR = [
-      { name: { contains: query, mode: "insensitive" } },
-      { description: { contains: query, mode: "insensitive" } },
-    ];
-  }
-
-  if (minPrice !== undefined || maxPrice !== undefined) {
-    where.basePrice = {};
-    if (minPrice !== undefined) where.basePrice.gte = minPrice;
-    if (maxPrice !== undefined) where.basePrice.lte = maxPrice;
-  }
-
-  // Build orderBy
-  let orderBy: any = { createdAt: "desc" };
-  switch (sortBy) {
-    case "price-asc":
-      orderBy = { basePrice: "asc" };
-      break;
-    case "price-desc":
-      orderBy = { basePrice: "desc" };
-      break;
-    case "name-asc":
-      orderBy = { name: "asc" };
-      break;
-    case "name-desc":
-      orderBy = { name: "desc" };
-      break;
-    case "popular":
-      orderBy = { bestseller: "desc" };
-      break;
-  }
-
-  // Fetch products and categories
-  const [products, totalCount, categories] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      orderBy,
-      skip: (page - 1) * 12,
-      take: 12,
-      include: {
-        category: true,
-        _count: {
-          select: { reviews: true },
-        },
-      },
-    }),
-    prisma.product.count({ where }),
-    prisma.category.findMany({
-      orderBy: { name: "asc" },
-    }),
-  ]);
-
-  // Calculate ratings
-  const productsWithRatings = await Promise.all(
-    products.map(async (product) => {
-      const reviews = await prisma.review.findMany({
-        where: { productId: product.id },
-        select: { rating: true },
-      });
-
-      const averageRating =
-        reviews.length > 0
-          ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-          : 0;
-
-      return {
-        ...product,
-        averageRating: Math.round(averageRating * 10) / 10,
-        reviewCount: reviews.length,
-      };
-    })
-  );
-
-  const totalPages = Math.ceil(totalCount / 12);
+export default async function CollectionsAllPage() {
+  const products = await prisma.product.findMany({
+    include: {
+      category: true,
+      _count: { select: { reviews: true } },
+    },
+    orderBy: { featured: 'desc' },
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4 py-12">
-          <h1 className="text-4xl font-bold mb-2">All Products</h1>
-          <p className="text-lg text-gray-600 max-w-3xl">
-            Browse our complete collection of personalized gifts and custom
-            products
-          </p>
-          <p className="mt-4 text-sm text-gray-600">
-            {totalCount} {totalCount === 1 ? "product" : "products"}
-          </p>
-        </div>
+    <div className="w-full px-6 md:px-[48px] py-12 md:py-24 max-w-[1280px] mx-auto">
+      <div className="text-center mb-16">
+        <h1 className="font-serif text-4xl md:text-5xl font-light italic text-primary tracking-tight mb-4">All Collections</h1>
+        <p className="font-serif italic text-base text-on-surface-variant max-w-xl mx-auto">
+          Explore our complete gallery of personalized keepsakes, designed to capture your most meaningful moments.
+        </p>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex gap-8">
-          {/* Sidebar Filters */}
-          <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-24">
-              <Suspense fallback={<div>Loading filters...</div>}>
-                <ProductFilters categories={categories} />
-              </Suspense>
-            </div>
-          </aside>
+      <div className="flex items-center justify-between border-b border-outline-variant pb-4 mb-12">
+        <span className="font-sans text-sm text-on-surface-variant">{products.length} Products</span>
+      </div>
 
-          {/* Products Grid */}
-          <div className="flex-1">
-            {/* Mobile Filters */}
-            <div className="lg:hidden mb-6">
-              <Suspense fallback={<div>Loading filters...</div>}>
-                <ProductFilters categories={categories} />
-              </Suspense>
-            </div>
-
-            <ProductGrid products={productsWithRatings} />
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-12 flex justify-center gap-2">
-                {page > 1 && (
-                  <a
-                    href={`?page=${page - 1}${sortBy !== "newest" ? `&sortBy=${sortBy}` : ""}`}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Previous
-                  </a>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-12">
+        {products.map((product) => (
+          <Link key={product.id} href={`/products/${product.slug}`} className="group flex flex-col items-center">
+            <div className="aspect-[4/5] w-full bg-surface-container overflow-hidden relative mb-6 border border-outline-variant p-2 flex flex-col">
+              <div className="flex-1 bg-surface-dim overflow-hidden relative">
+                {product.images[0] && (
+                  <Image
+                    src={product.images[0]}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    className="object-cover object-center group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+                  />
                 )}
-
-                {[...Array(totalPages)].map((_, i) => {
-                  const pageNum = i + 1;
-                  if (
-                    pageNum === 1 ||
-                    pageNum === 2 ||
-                    pageNum === totalPages ||
-                    pageNum === totalPages - 1 ||
-                    Math.abs(pageNum - page) <= 1
-                  ) {
-                    return (
-                      <a
-                        key={pageNum}
-                        href={`?page=${pageNum}${sortBy !== "newest" ? `&sortBy=${sortBy}` : ""}`}
-                        className={`px-4 py-2 rounded-lg transition-colors ${
-                          page === pageNum
-                            ? "bg-gray-900 text-white"
-                            : "border border-gray-300 hover:bg-gray-50"
-                        }`}
-                      >
-                        {pageNum}
-                      </a>
-                    );
-                  } else if (pageNum === page - 2 || pageNum === page + 2) {
-                    return <span key={pageNum}>...</span>;
-                  }
-                  return null;
-                })}
-
-                {page < totalPages && (
-                  <a
-                    href={`?page=${page + 1}${sortBy !== "newest" ? `&sortBy=${sortBy}` : ""}`}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Next
-                  </a>
+                {product.featured && (
+                  <div className="absolute top-4 left-4 bg-surface/90 backdrop-blur px-3 py-1 font-sans text-[10px] font-bold uppercase tracking-wider text-primary border border-outline-variant">
+                    Featured
+                  </div>
                 )}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+            <div className="text-center px-4 w-full flex flex-col items-center">
+              <h3 className="font-sans text-[10px] uppercase tracking-wider font-bold text-primary mb-1 line-clamp-1 group-hover:text-secondary transition-colors">{product.name}</h3>
+              {product._count.reviews > 0 && (
+                <div className="flex items-center gap-1 mb-1 text-primary">
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                  <span className="font-sans text-xs font-semibold">{product._count.reviews}</span>
+                </div>
+              )}
+              <p className="font-serif text-[10px] text-on-surface-variant italic mb-2 line-clamp-1">{product.category.name}</p>
+              <span className="font-serif italic text-xs text-on-surface-variant">From {formatPrice(product.basePrice)}</span>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   );

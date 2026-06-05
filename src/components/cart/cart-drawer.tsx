@@ -1,7 +1,7 @@
 'use client';
 
 import { useCartStore } from '@/store/cart-store';
-import { X, ShoppingBag, Truck } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import { CartItem } from './cart-item';
 import { formatPrice } from '@/lib/utils';
 import { FREE_SHIPPING_THRESHOLD_CENTS } from '@/lib/shipping-config';
@@ -12,74 +12,46 @@ export function CartDrawer() {
   const { items, isOpen, closeCart, getTotalPrice } = useCartStore();
   const totalPrice = getTotalPrice();
 
-  // Prevent body scroll when drawer is open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    if (isOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = '';
+    return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 z-50 transition-opacity"
-        onClick={closeCart}
-      />
+      {/* Overlay */}
+      <div className="fixed inset-0 bg-black/30 z-50 backdrop-blur-sm" onClick={closeCart} />
 
       {/* Drawer */}
-      <div
-        data-testid="cart-drawer"
-        className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 flex flex-col"
-      >
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-surface z-50 shadow-2xl flex flex-col border-l border-outline-variant">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="h-5 w-5" />
-            <h2 className="text-lg font-semibold">
-              Shopping Cart ({items.length})
-            </h2>
-          </div>
-          <button
-            onClick={closeCart}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Close cart"
-          >
-            <X className="h-5 w-5" />
+        <div className="flex items-center justify-between p-6 border-b border-outline-variant">
+          <h2 className="font-serif text-xl font-medium text-primary">Your Cart</h2>
+          <button onClick={closeCart} className="text-on-surface-variant hover:text-primary transition-colors">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Cart Items */}
+        {/* Items */}
         <div className="flex-1 overflow-y-auto p-6">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <ShoppingBag className="h-16 w-16 text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Your cart is empty
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Start adding some amazing personalized gifts!
-              </p>
+            <div className="text-center py-16">
+              <p className="font-serif italic text-on-surface-variant mb-6">Your cart is empty</p>
               <Link
                 href="/collections/all"
                 onClick={closeCart}
-                className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                className="inline-flex items-center bg-primary text-on-primary px-6 py-3 font-sans text-[11px] uppercase tracking-[0.2em] font-semibold hover:bg-secondary transition-colors"
               >
-                Start Shopping
+                Explore Collections
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {items.map((item) => (
-                <CartItem key={item.id} item={item} />
+                <CartItem key={`${item.productId}-${item.variantId}`} item={item} />
               ))}
             </div>
           )}
@@ -87,71 +59,39 @@ export function CartDrawer() {
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="border-t p-6 space-y-4">
+          <div className="border-t border-outline-variant p-6 space-y-4">
             {/* Free shipping progress */}
             {totalPrice < FREE_SHIPPING_THRESHOLD_CENTS ? (
-              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
-                <Truck className="w-4 h-4 flex-shrink-0" />
-                <span>Plus que {formatPrice(FREE_SHIPPING_THRESHOLD_CENTS - totalPrice)} pour la livraison gratuite</span>
-              </div>
+              <p className="font-sans text-xs text-on-surface-variant text-center">
+                Plus que {formatPrice(FREE_SHIPPING_THRESHOLD_CENTS - totalPrice)} pour la livraison gratuite
+              </p>
             ) : (
-              <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg px-3 py-2">
-                <Truck className="w-4 h-4 flex-shrink-0" />
-                <span>Livraison gratuite !</span>
-              </div>
+              <p className="font-sans text-xs text-secondary text-center font-semibold uppercase tracking-wider">
+                Livraison gratuite
+              </p>
             )}
 
-            {/* Subtotal */}
-            <div className="flex items-center justify-between text-lg font-semibold">
-              <span>Subtotal</span>
-              <span>{formatPrice(totalPrice)}</span>
+            {/* Total */}
+            <div className="flex items-center justify-between">
+              <span className="font-sans text-sm uppercase tracking-wider font-semibold text-primary">Total</span>
+              <span className="font-serif text-2xl font-medium text-primary">{formatPrice(totalPrice)}</span>
             </div>
-
-            <p className="text-sm text-gray-600">
-              Shipping and taxes calculated at checkout
-            </p>
 
             {/* Actions */}
-            <div className="space-y-2">
-              <Link
-                href="/checkout"
-                onClick={closeCart}
-                className="block w-full py-3 bg-gray-900 text-white text-center rounded-lg hover:bg-gray-800 transition-colors font-medium"
-              >
-                Proceed to Checkout
-              </Link>
-              <Link
-                href="/cart"
-                onClick={closeCart}
-                className="block w-full py-3 border border-gray-300 text-gray-900 text-center rounded-lg hover:bg-gray-50 transition-colors font-medium"
-              >
-                View Cart
-              </Link>
-            </div>
-
-            {/* Free shipping progress */}
-            {totalPrice < 50 && (
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-sm text-blue-900">
-                  Add {formatPrice(50 - totalPrice)} more for{' '}
-                  <strong>free shipping</strong>!
-                </p>
-                <div className="mt-2 h-2 bg-blue-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-600 transition-all duration-300"
-                    style={{ width: `${(totalPrice / 50) * 100}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {totalPrice >= 50 && (
-              <div className="bg-green-50 p-4 rounded-lg text-center">
-                <p className="text-sm text-green-900 font-medium">
-                  🎉 You qualify for free shipping!
-                </p>
-              </div>
-            )}
+            <Link
+              href="/checkout"
+              onClick={closeCart}
+              className="flex items-center justify-center w-full bg-primary text-on-primary py-4 font-sans text-[11px] uppercase tracking-[0.1em] font-semibold hover:bg-secondary transition-colors"
+            >
+              Proceed to Checkout
+            </Link>
+            <Link
+              href="/cart"
+              onClick={closeCart}
+              className="block w-full py-3 text-center font-sans text-[11px] uppercase tracking-[0.1em] font-medium text-on-surface-variant hover:text-primary transition-colors border border-outline-variant"
+            >
+              View Cart
+            </Link>
           </div>
         )}
       </div>

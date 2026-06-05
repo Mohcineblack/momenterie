@@ -12,51 +12,42 @@ export async function ReviewsCarousel() {
     },
   });
 
-  if (reviews.length === 0) {
-    return null;
-  }
+  if (reviews.length === 0) return null;
 
   const avgRating = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
 
   return (
-    <section className="py-20 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">
-            Ce que nos clients disent
-          </h2>
-          <div className="flex items-center justify-center gap-2">
+    <section className="py-[96px] px-6 md:px-[48px] bg-surface">
+      <div className="max-w-[1280px] mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="font-serif italic text-4xl text-primary mb-4">What Our Clients Say</h2>
+          <div className="flex items-center justify-center gap-3">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-5 h-5 ${i < Math.round(avgRating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                />
+                <Star key={i} className={`w-4 h-4 ${i < Math.round(avgRating) ? 'fill-current text-primary' : 'text-surface-container-high'}`} />
               ))}
             </div>
-            <span className="text-gray-600">
-              {avgRating.toFixed(1)} / 5 ({reviews.length} avis vérifiés)
+            <span className="font-sans text-xs text-on-surface-variant uppercase tracking-wider">
+              {avgRating.toFixed(1)} / 5 &mdash; {reviews.length} verified reviews
             </span>
           </div>
+          <div className="w-12 h-[1px] bg-primary/30 mx-auto mt-6" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {reviews.slice(0, 4).map((review) => (
-            <div key={review.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div key={review.id} className="bg-surface-container-lowest border border-outline-variant p-6 flex flex-col">
               <div className="flex mb-3">
                 {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-4 h-4 ${i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                  />
+                  <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-current text-primary' : 'text-surface-container-high'}`} />
                 ))}
               </div>
               {review.title && (
-                <p className="font-semibold text-gray-900 mb-1">{review.title}</p>
+                <p className="font-sans text-sm font-semibold text-primary mb-1">{review.title}</p>
               )}
-              <p className="text-gray-600 text-sm line-clamp-4 mb-4">{review.comment}</p>
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span className="font-medium">{review.user.name || 'Client'}</span>
+              <p className="font-serif italic text-sm text-on-surface-variant line-clamp-4 mb-4 flex-1">{review.comment}</p>
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider font-semibold text-on-surface-variant pt-4 border-t border-outline-variant">
+                <span>{review.user.name || 'Client'}</span>
                 <span>{review.product.name}</span>
               </div>
             </div>
