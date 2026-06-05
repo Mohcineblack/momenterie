@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useCartStore } from "@/store/cart-store";
 import { formatPrice } from "@/lib/utils";
 import type { CitymapSpec } from "@/lib/render/spec";
-import { ArrowLeft, MapPin, Type, LayoutTemplate, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
 function CityMapEditorPage() {
@@ -26,7 +26,6 @@ function CityMapEditorPage() {
   const [product, setProduct] = useState<any>(null);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [frameColor, setFrameColor] = useState("black");
-  const [activeTab, setActiveTab] = useState<"location" | "text" | "style">("location");
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -89,90 +88,62 @@ function CityMapEditorPage() {
         <div className="w-5" />
       </div>
 
-      {/* Left: Preview area */}
-      <div className="flex-1 relative flex flex-col bg-surface-container-lowest">
-        <div className="absolute top-4 left-4 z-10 hidden md:block">
+      {/* Left: Preview — the rendered map artwork */}
+      <div className="flex-1 flex flex-col bg-surface-container-lowest overflow-hidden">
+        <div className="hidden md:flex items-center p-4">
           <Link href={`/products/${productSlug || "custom-city-map"}`} className="flex items-center gap-2 text-on-surface-variant hover:text-primary text-sm font-sans tracking-wide">
             <ArrowLeft className="w-4 h-4" /> Back to Product
           </Link>
         </div>
 
-        {/* Map Editor */}
-        <div className="flex-1 relative" style={{ minHeight: "400px" }}>
+        {/* Map (interactive, for positioning) */}
+        <div className="relative w-full" style={{ height: "50vh" }}>
           <CityMapEditorComponent />
         </div>
 
-        {/* Preview */}
-        <div className="p-6 bg-surface border-t border-outline-variant">
-          <div className="max-w-[300px] mx-auto">
+        {/* Rendered preview (the actual poster artwork) */}
+        <div className="flex-1 flex items-center justify-center p-8 bg-surface">
+          <div className="w-full max-w-[360px]">
             <CityMapPreview />
           </div>
         </div>
       </div>
 
       {/* Right: Controls panel */}
-      <div className="w-full md:w-[450px] lg:w-[500px] bg-surface border-t md:border-t-0 md:border-l border-outline-variant flex flex-col max-h-screen overflow-hidden">
+      <div className="w-full md:w-[420px] lg:w-[460px] bg-surface border-t md:border-t-0 md:border-l border-outline-variant flex flex-col max-h-screen overflow-hidden">
         <div className="p-6 md:p-8 border-b border-outline-variant">
-          <h1 className="font-serif text-2xl font-medium text-primary mb-2">Design Your Map</h1>
+          <h1 className="font-serif text-2xl font-medium text-primary mb-1">Design Your Map</h1>
           <p className="font-sans text-sm text-on-surface-variant">Customize location, text, and style.</p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-outline-variant">
-          {([
-            { key: "location", icon: MapPin, label: "Location" },
-            { key: "text", icon: Type, label: "Text" },
-            { key: "style", icon: LayoutTemplate, label: "Style" },
-          ] as const).map(({ key, icon: Icon, label }) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              className={`flex-1 flex flex-col items-center justify-center p-4 gap-2 font-sans text-xs uppercase tracking-wider font-semibold transition-colors ${
-                activeTab === key ? "text-primary border-b-2 border-primary" : "text-on-surface-variant hover:bg-surface-container-lowest"
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              {label}
-            </button>
-          ))}
-        </div>
+        {/* All controls in a scrollable area */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
+          {/* Location + Text + Style controls */}
+          <EditorControls />
 
-        {/* Tab content */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8">
-          {activeTab === "location" && (
-            <div className="space-y-6">
-              <EditorControls />
-            </div>
-          )}
-          {activeTab === "text" && (
-            <div className="space-y-6">
-              <EditorControls />
-            </div>
-          )}
-          {activeTab === "style" && (
-            <div className="space-y-6">
-              {product && selectedVariant && (
-                <FrameUpsell
-                  variants={product.variants}
-                  selectedVariant={selectedVariant}
-                  basePrice={product.basePrice}
-                  onVariantChange={setSelectedVariant}
-                  onFrameColorChange={setFrameColor}
-                />
-              )}
+          {/* Frame upsell */}
+          {product && selectedVariant && (
+            <div className="pt-6 border-t border-outline-variant">
+              <FrameUpsell
+                variants={product.variants}
+                selectedVariant={selectedVariant}
+                basePrice={product.basePrice}
+                onVariantChange={setSelectedVariant}
+                onFrameColorChange={setFrameColor}
+              />
             </div>
           )}
         </div>
 
         {/* Footer CTA */}
         <div className="p-6 md:p-8 bg-surface-container-low border-t border-outline-variant">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <span className="font-serif text-xl font-medium text-primary">Total</span>
             <span className="font-sans text-xl font-semibold text-primary">{formatPrice(currentPrice)}</span>
           </div>
           <button
             onClick={handleAddToCart}
-            className="flex items-center justify-center w-full gap-2 bg-primary text-on-primary py-4 font-sans text-xs uppercase tracking-[0.1em] font-semibold hover:bg-secondary transition-colors shadow-md"
+            className="flex items-center justify-center w-full gap-2 bg-primary text-on-primary py-4 font-sans text-[11px] uppercase tracking-[0.1em] font-semibold hover:bg-secondary transition-colors shadow-md"
           >
             <ShoppingBag className="w-4 h-4" /> Add to Cart
           </button>
@@ -184,7 +155,7 @@ function CityMapEditorPage() {
 
 export default function CityMapEditorPageWrapper() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="font-sans text-on-surface-variant">Loading...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-surface"><p className="font-sans text-on-surface-variant">Loading...</p></div>}>
       <CityMapEditorPage />
     </Suspense>
   );
