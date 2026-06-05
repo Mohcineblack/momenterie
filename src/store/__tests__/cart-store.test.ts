@@ -9,9 +9,16 @@ const createTestItem = (overrides = {}): Omit<CartItem, 'id'> => ({
   variantId: 1,
   variantName: 'Default Variant',
   quantity: 1,
-  basePrice: 29.99,
+  basePrice: 2999,
   variantPrice: 0,
-  customizationData: {},
+  customizationData: {
+    date: '2024-01-01',
+    eventName: 'Test Event',
+    style: {
+      typography: 'classic',
+      colorScheme: 'black',
+    },
+  },
   previewImageUrl: '/test.jpg',
   ...overrides,
 })
@@ -181,14 +188,14 @@ describe('Cart Store', () => {
       act(() => {
         useCartStore.getState().updateItem(itemId, {
           quantity: 5,
-          variantPrice: 10,
+          variantPrice: 1000,
         })
       })
 
       const state = useCartStore.getState()
       expect(state.items[0].quantity).toBe(5)
-      expect(state.items[0].variantPrice).toBe(10)
-      expect(state.items[0].basePrice).toBe(29.99) // Unchanged
+      expect(state.items[0].variantPrice).toBe(1000)
+      expect(state.items[0].basePrice).toBe(2999) // Unchanged
     })
   })
 
@@ -279,35 +286,35 @@ describe('Cart Store', () => {
     it('calculates total price correctly with base price only', () => {
       act(() => {
         useCartStore.getState().addItem(
-          createTestItem({ basePrice: 10, variantPrice: 0, quantity: 2 })
+          createTestItem({ basePrice: 1000, variantPrice: 0, quantity: 2 })
         )
         useCartStore.getState().addItem(
-          createTestItem({ basePrice: 15, variantPrice: 0, quantity: 1 })
+          createTestItem({ basePrice: 1500, variantPrice: 0, quantity: 1 })
         )
       })
 
       const total = useCartStore.getState().getTotalPrice()
-      expect(total).toBe(35) // (10 * 2) + (15 * 1)
+      expect(total).toBe(3500)
     })
 
     it('calculates total price correctly with base + variant price', () => {
       act(() => {
         useCartStore.getState().addItem(
-          createTestItem({ basePrice: 10, variantPrice: 5, quantity: 2 })
+          createTestItem({ basePrice: 1000, variantPrice: 500, quantity: 2 })
         )
         useCartStore.getState().addItem(
-          createTestItem({ basePrice: 20, variantPrice: 10, quantity: 1 })
+          createTestItem({ basePrice: 2000, variantPrice: 1000, quantity: 1 })
         )
       })
 
       const total = useCartStore.getState().getTotalPrice()
-      expect(total).toBe(60) // (15 * 2) + (30 * 1)
+      expect(total).toBe(6000)
     })
   })
 
   describe('getItemPrice', () => {
     it('calculates item price correctly', () => {
-      const item = createTestItem({ basePrice: 29.99, variantPrice: 10 })
+      const item = createTestItem({ basePrice: 2999, variantPrice: 1000 })
 
       act(() => {
         useCartStore.getState().addItem(item)
@@ -316,11 +323,11 @@ describe('Cart Store', () => {
       const cartItem = useCartStore.getState().items[0]
       const price = useCartStore.getState().getItemPrice(cartItem)
 
-      expect(price).toBe(39.99)
+      expect(price).toBe(3999)
     })
 
     it('handles items with no variant price', () => {
-      const item = createTestItem({ basePrice: 29.99, variantPrice: 0 })
+      const item = createTestItem({ basePrice: 2999, variantPrice: 0 })
 
       act(() => {
         useCartStore.getState().addItem(item)
@@ -329,7 +336,7 @@ describe('Cart Store', () => {
       const cartItem = useCartStore.getState().items[0]
       const price = useCartStore.getState().getItemPrice(cartItem)
 
-      expect(price).toBe(29.99)
+      expect(price).toBe(2999)
     })
   })
 })

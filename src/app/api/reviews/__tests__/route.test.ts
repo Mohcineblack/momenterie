@@ -18,6 +18,10 @@ describe('POST /api/reviews', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    ;(prisma.product.findUnique as jest.Mock).mockResolvedValue({
+      id: 1,
+      name: 'Test Product',
+    })
   })
 
   it('creates a review successfully', async () => {
@@ -33,7 +37,7 @@ describe('POST /api/reviews', () => {
       userId: 'user-1',
       rating: 5,
       title: 'Great product!',
-      comment: 'Love it!',
+      comment: 'Love it a lot!',
     })
 
     const request = new NextRequest('http://localhost:3000/api/reviews', {
@@ -42,7 +46,7 @@ describe('POST /api/reviews', () => {
         productId: 1,
         rating: 5,
         title: 'Great product!',
-        comment: 'Love it!',
+        comment: 'Love it a lot!',
       }),
     })
 
@@ -63,7 +67,7 @@ describe('POST /api/reviews', () => {
         productId: 1,
         rating: 5,
         title: 'Great',
-        comment: 'Good',
+        comment: 'Good product',
       }),
     })
 
@@ -84,7 +88,7 @@ describe('POST /api/reviews', () => {
         productId: 1,
         rating: 5,
         title: 'Great',
-        comment: 'Good',
+        comment: 'Good product',
       }),
     })
 
@@ -112,7 +116,7 @@ describe('POST /api/reviews', () => {
         productId: 1,
         rating: 5,
         title: 'Great',
-        comment: 'Good',
+        comment: 'Good product',
       }),
     })
 
@@ -132,7 +136,7 @@ describe('POST /api/reviews', () => {
         productId: 1,
         rating: 6,
         title: 'Great',
-        comment: 'Good',
+        comment: 'Good product',
       }),
     })
 

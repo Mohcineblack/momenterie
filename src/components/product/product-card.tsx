@@ -29,7 +29,10 @@ export function ProductCard({ product }: ProductCardProps) {
   const secondaryImage = product.images[1] || primaryImage;
 
   return (
-    <div className="group relative bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300">
+    <div
+      data-testid="product-card"
+      className="group relative bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300"
+    >
       {/* Badges */}
       <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
         {product.bestseller && (

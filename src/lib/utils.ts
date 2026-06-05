@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/shipping-config";
 
 /**
  * Merge Tailwind CSS classes with proper precedence
@@ -9,13 +10,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format price to EUR currency
+ * Format integer cents to a localized currency string.
  */
-export function formatPrice(price: number): string {
+export function formatPrice(amountCents: number, currency: string = 'EUR'): string {
   return new Intl.NumberFormat('de-DE', {
     style: 'currency',
-    currency: 'EUR',
-  }).format(price);
+    currency,
+  }).format(amountCents / 100);
 }
 
 /**
@@ -147,39 +148,50 @@ export function generateOrderNumber(): string {
 /**
  * Calculate shipping cost based on country and total
  */
-export function calculateShippingCost(country: string, total: number): number {
-  // Free shipping over €50
-  if (total >= 50) return 0;
+export function calculateShippingCost(country: string, totalCents: number): number {
+  // Free shipping over threshold
+  if (totalCents >= FREE_SHIPPING_THRESHOLD_CENTS) return 0;
 
   // EU countries
   const euCountries = ['DE', 'AT', 'FR', 'BE', 'NL', 'IT', 'ES', 'PT', 'PL', 'CZ', 'DK', 'SE'];
-  if (euCountries.includes(country)) return 4.95;
+  if (euCountries.includes(country)) return 495;
 
   // Switzerland
-  if (country === 'CH') return 9.95;
+  if (country === 'CH') return 995;
 
   // UK
-  if (country === 'GB') return 7.95;
+  if (country === 'GB') return 795;
 
   // Rest of world
-  return 14.95;
+  return 1495;
 }
 
 /**
  * Calculate tax based on country
  */
-export function calculateTax(subtotal: number, country: string): number {
-  // Germany VAT
-  if (country === 'DE') return subtotal * 0.19;
+export const DESTINATION_VAT_RATES: Record<string, number> = {
+  DE: 0.19,
+  FR: 0.20,
+  AT: 0.20,
+  NL: 0.21,
+  IT: 0.22,
+  BE: 0.21,
+};
 
-  // Austria VAT
-  if (country === 'AT') return subtotal * 0.20;
+/** VAT mode: 'franchise_en_base' = 0 tax (micro-entreprise), 'standard' = destination rates */
+export type VatMode = 'franchise_en_base' | 'standard';
 
-  // France VAT
-  if (country === 'FR') return subtotal * 0.20;
+export function getVatMode(): VatMode {
+  return (process.env.NEXT_PUBLIC_VAT_MODE as VatMode) || 'franchise_en_base';
+}
 
-  // Add more countries as needed
-  return 0;
+/** Legal mention required under franchise en base de TVA */
+export const VAT_LEGAL_MENTION = 'TVA non applicable, article 293 B du CGI';
+
+export function calculateTax(subtotalCents: number, country: string): number {
+  if (getVatMode() === 'franchise_en_base') return 0;
+  const rate = DESTINATION_VAT_RATES[country.toUpperCase()] ?? 0;
+  return Math.round(subtotalCents * rate);
 }
 
 /**

@@ -116,8 +116,8 @@ function PuzzleEditorPage() {
         variantId: selectedVariant.id,
         variantName: selectedVariant.name,
         quantity: 1,
-        basePrice: parseFloat(product.price),
-        variantPrice: parseFloat(selectedVariant.price),
+        basePrice: product.basePrice,
+        variantPrice: selectedVariant.priceModifier,
         customizationData,
         previewImageUrl: imageUrl,
       });

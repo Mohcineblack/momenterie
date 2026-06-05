@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { LoginForm } from '@/components/auth/login-form';
 import { GoogleSignInButton } from '@/components/auth/google-signin-button';
+import { AppleSignInButton } from '@/components/auth/apple-signin-button';
 
 export const metadata: Metadata = {
   title: 'Login - Momenterie',
@@ -29,6 +30,9 @@ export default function LoginPage() {
             {/* Google Sign In */}
             <div>
               <GoogleSignInButton />
+              <div className="mt-3">
+                <AppleSignInButton />
+              </div>
 
               {/* Divider */}
               <div className="relative my-6">

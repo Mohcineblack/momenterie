@@ -41,13 +41,14 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
   const getStatusStep = (status: string): number => {
     switch (status) {
-      case 'pending':
+      case 'PENDING':
         return 1;
-      case 'processing':
+      case 'PROCESSING':
+      case 'IN_PRODUCTION':
         return 2;
-      case 'shipped':
+      case 'SHIPPED':
         return 3;
-      case 'delivered':
+      case 'DELIVERED':
         return 4;
       default:
         return 0;
@@ -64,8 +65,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+    <div>
         {/* Back Button */}
         <Link
           href="/account/orders"
@@ -141,12 +141,29 @@ export default async function OrderDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Tracking Number */}
-          {order.trackingNumber && (
+          {/* Tracking Info */}
+          {(order.trackingNumber || order.trackingUrl) && (
             <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-900">
-                <span className="font-semibold">Tracking Number:</span> {order.trackingNumber}
-              </p>
+              {order.carrier && (
+                <p className="text-sm text-blue-900 mb-1">
+                  <span className="font-semibold">Transporteur :</span> {order.carrier}
+                </p>
+              )}
+              {order.trackingUrl ? (
+                <a
+                  href={order.trackingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-blue-700 hover:text-blue-900 underline"
+                >
+                  <Truck className="w-4 h-4" />
+                  Suivre ma livraison
+                </a>
+              ) : order.trackingNumber ? (
+                <p className="text-sm text-blue-900">
+                  <span className="font-semibold">N° de suivi :</span> {order.trackingNumber}
+                </p>
+              ) : null}
             </div>
           )}
         </div>
@@ -247,7 +264,6 @@ export default async function OrderDetailPage({ params }: PageProps) {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

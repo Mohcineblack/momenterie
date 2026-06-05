@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Environment setup + Prisma schema additions + SKU mapping + presigned URL helper. This combines the schema migration (schema_additions), FUL-1 (SKU mapping), and FUL-2 (asset presigning) into one coherent setup feature since they are all foundational with no UI and can be tested together.",
+  "status": "completed",
+  "steps": [
+    "Step 1 - Prisma schema additions: Add to the Order model in prisma/schema.prisma: prodigiOrderId String? @unique, supplierCostCents Int?, carrier String?, trackingUrl String?, shippedAt DateTime?, fulfillmentError String?. Check that trackingNumber already exists (it does). Create a migration file using `npx prisma migrate dev --create-only --name add_fulfillment_fields` (will fail without DB, so manually create the migration SQL file in prisma/migrations/<timestamp>_add_fulfillment_fields/migration.sql with the ALTER TABLE statements). Then run `npx prisma generate` to regenerate the client.",
+    "Step 2 - Install @aws-sdk/s3-request-presigner: Run `npm install @aws-sdk/s3-request-presigner --legacy-peer-deps` to add presigned URL support.",
+    "Step 3 - Create src/lib/fulfillment/prodigi-config.ts: Export PRODIGI_API_BASE (derived from PRODIGI_ENV env var: sandbox -> https://api.sandbox.prodigi.com, live -> https://api.prodigi.com). Export getProdigiApiKey() that reads PRODIGI_API_KEY from env. Default PRODIGI_ENV to 'sandbox'.",
+    "Step 4 - Create src/lib/fulfillment/sku-mapping.ts: A typed mapping from internal ProductVariant attributes (product slug + size + material + color) to Prodigi SKU strings. Cover the launch range: citymap and starmap products in Poster (fine art), Framed (black, white, oak frame colours), at sizes A4, A3, 30x40, 50x70. Use realistic Prodigi SKU format (e.g. 'GLOBAL-FAP-A4' for Fine Art Paper A4, 'GLOBAL-FRA-A3-BLK' for Framed A3 Black). Export a function resolveProdigiSku(variant: {productSlug: string, size: string | null, material: string | null, color: string | null}): string that returns the SKU or throws a clear error for unmapped variants. Include per-SKU print attributes (widthPx, heightPx, dpi, format, bleedMm) aligned with Prodigi specs.",
+    "Step 5 - Create src/lib/fulfillment/presign.ts: A helper getPresignedProductionUrl(productionFileUrl: string): Promise<string> that parses an r2://<bucket>/<key> URL, creates a GetObjectCommand, and uses getSignedUrl from @aws-sdk/s3-request-presigner with an expiry of 6 hours. Reuse the S3Client config pattern from src/lib/render/r2.ts (same env vars). If the URL is already an https:// URL, return it as-is.",
+    "Step 6 - Update .env.example: Add PRODIGI_API_KEY, PRODIGI_ENV=sandbox, R2 env vars if not already there.",
+    "Step 7 - Create src/lib/fulfillment/__tests__/sku-mapping.test.ts: Test that every seeded citymap/starmap variant resolves to a Prodigi SKU. Test that an unmapped variant (e.g. puzzle product) throws a clear error. Test that canvas/foil variants that are not in the Prodigi mapping throw.",
+    "Step 8 - Create src/lib/fulfillment/__tests__/presign.test.ts: Mock @aws-sdk/s3-request-presigner getSignedUrl to return a fake URL. Test that r2://bucket/key input produces a presigned URL. Test that https:// input is returned as-is. Test that invalid input throws.",
+    "Step 9 - Fix the pre-existing paid-writer test: The test in src/app/api/__tests__/paid-writer.test.ts fails because src/app/api/webhooks/stripe/__tests__/route.test.ts also matches the regex pattern. Fix the paid-writer test to exclude __tests__ directories from its file walk so it only scans production code."
+  ],
+  "acceptance_criteria": [
+    "prisma/schema.prisma includes prodigiOrderId, supplierCostCents, carrier, trackingUrl, shippedAt, fulfillmentError on Order model",
+    "npx prisma generate succeeds with the new schema",
+    "resolveProdigiSku returns valid SKUs for all seeded citymap/starmap Poster and Framed variants",
+    "resolveProdigiSku throws for unmapped variants (puzzle, jewelry, canvas)",
+    "getPresignedProductionUrl correctly handles r2:// URLs and pass-through of https:// URLs",
+    "All tests in src/lib/fulfillment/__tests__/ pass",
+    "The paid-writer invariant test passes (no longer picks up test files)"
+  ],
+  "verification": [
+    "npm run typecheck",
+    "npm run lint",
+    "npm test",
+    "npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": "All verification passed: typecheck, lint (0 errors, only pre-existing warnings), all 139 tests pass (15 suites), and build succeeds. The PRINT_DIMENSIONS keys must use the Prodigi size codes (A4, A3, 30x40, 50x70) not the internal variant sizes (30x40cm, 50x70cm) since SIZE_MAP strips the 'cm' suffix. The paid-writer test fix successfully excludes __tests__ directories from the walk scan."
+}

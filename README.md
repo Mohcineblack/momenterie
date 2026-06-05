@@ -34,3 +34,14 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+• Fix storefront build, checkout integrity, and test stability
+
+- Resolve Next.js 16 build blockers from import-time env validation in Stripe, Resend, and Mapbox integrations
+- Replace native bcrypt with bcryptjs to avoid missing Windows native binding failures
+- Harden checkout/payment flow by recomputing totals server-side and adding paid order handling
+- Fix editor product routing, variant pricing, cart item IDs, and currency rounding
+- Update dependencies for React 19/Next 16 compatibility
+- Add Jest setup/polyfills and align tests with current app behavior
+- Add typecheck script and stabilize lint/build configuration
+- Seed missing Date Print product/category data

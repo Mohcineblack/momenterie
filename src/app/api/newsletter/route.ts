@@ -1,13 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { checkRateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 const newsletterSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
 });
 
+function generateCouponCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'BIENVENUE-';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const rateLimit = checkRateLimit({
+      key: `newsletter:${getClientIp(request)}`,
+      limit: 10,
+      windowMs: 60 * 60 * 1000,
+    });
+
+    if (rateLimit.limited) {
+      return rateLimitResponse(rateLimit.resetAt);
+    }
+
     const body = await request.json();
     const validatedData = newsletterSchema.parse(body);
 
@@ -20,22 +38,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'This email is already subscribed to our newsletter',
+          error: 'Cet email est déjà inscrit à notre newsletter',
         },
         { status: 400 }
       );
     }
 
-    // Create new subscriber
-    const subscriber = await prisma.newsletter.create({
-      data: {
-        email: validatedData.email,
-      },
-    });
+    // Create subscriber + first-order coupon in a transaction
+    const couponCode = generateCouponCode();
+
+    const [subscriber] = await prisma.$transaction([
+      prisma.newsletter.create({
+        data: { email: validatedData.email },
+      }),
+      prisma.coupon.create({
+        data: {
+          code: couponCode,
+          description: `Newsletter welcome - ${validatedData.email}`,
+          discountType: 'percentage',
+          discountValue: 5,
+          usageLimit: 1,
+          usageCount: 0,
+          validFrom: new Date(),
+          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          active: true,
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,
-      message: 'Successfully subscribed to newsletter!',
+      message: 'Inscription réussie !',
+      couponCode,
       data: subscriber,
     });
   } catch (error: any) {
@@ -58,24 +92,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Optional: GET endpoint for admin to view subscribers
-export async function GET(request: NextRequest) {
-  try {
-    // You could add admin authentication here
-    const subscribers = await prisma.newsletter.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: subscribers,
-      count: subscribers.length,
-    });
-  } catch (error: any) {
-    console.error('Error fetching newsletter subscribers:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch subscribers' },
-      { status: 500 }
-    );
-  }
-}

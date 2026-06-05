@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 const createReviewSchema = z.object({
   productId: z.number(),
@@ -12,6 +13,16 @@ const createReviewSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimit = checkRateLimit({
+      key: `reviews:${getClientIp(request)}`,
+      limit: 8,
+      windowMs: 60 * 60 * 1000,
+    });
+
+    if (rateLimit.limited) {
+      return rateLimitResponse(rateLimit.resetAt);
+    }
+
     const session = await auth();
 
     if (!session?.user) {
@@ -42,7 +53,7 @@ export async function POST(request: NextRequest) {
         productId: validatedData.productId,
         order: {
           userId: session.user.id,
-          paymentStatus: "paid",
+          paymentStatus: "PAID",
         },
       },
     });

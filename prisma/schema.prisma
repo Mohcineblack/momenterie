@@ -81,7 +81,7 @@ model Product {
   description         String
   categoryId          Int
   category            Category               @relation(fields: [categoryId], references: [id])
-  basePrice           Float
+  basePrice           Int
   images              String[]
   featured            Boolean                @default(false)
   bestseller          Boolean                @default(false)
@@ -101,7 +101,7 @@ model ProductVariant {
   product         Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   name            String
   sku             String      @unique
-  priceModifier   Float       @default(0)
+  priceModifier   Int         @default(0)
   size            String?
   material        String?
   color           String?
@@ -153,20 +153,38 @@ model CartItem {
   updatedAt           DateTime @updatedAt
 }
 
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  IN_PRODUCTION
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
 model Order {
   id              String      @id @default(cuid())
   userId          String
   user            User        @relation(fields: [userId], references: [id])
   orderNumber     String      @unique
-  status          String      @default("pending") // "pending", "processing", "shipped", "delivered", "cancelled"
+  status          OrderStatus @default(PENDING)
 
   items           OrderItem[]
 
-  subtotal        Float
-  shippingCost    Float       @default(0)
-  tax             Float       @default(0)
-  discount        Float       @default(0)
-  total           Float
+  subtotal        Int
+  shippingCost    Int         @default(0)
+  tax             Int         @default(0)
+  discount        Int         @default(0)
+  total           Int
 
   shippingAddress Address     @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
   shippingAddressId String
@@ -174,13 +192,30 @@ model Order {
   billingAddressId String
 
   paymentIntentId String?
-  paymentStatus   String      @default("unpaid") // "unpaid", "paid", "refunded"
+  paymentStatus   PaymentStatus @default(UNPAID)
 
   trackingNumber  String?
   notes           String?
 
+  prodigiOrderId  String?     @unique
+  supplierCostCents Int?
+  carrier         String?
+  trackingUrl     String?
+  shippedAt       DateTime?
+  fulfillmentError String?
+
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+}
+
+model StripeWebhookEvent {
+  id          String    @id @default(cuid())
+  eventId     String    @unique
+  type        String
+  processedAt DateTime?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model OrderItem {
@@ -193,7 +228,7 @@ model OrderItem {
   variant             ProductVariant? @relation(fields: [variantId], references: [id])
 
   quantity            Int
-  price               Float
+  price               Int
   customizationData   Json
   previewImageUrl     String?
   productionFileUrl   String?         // High-res file for printing
@@ -250,9 +285,9 @@ model Coupon {
   code            String    @unique
   description     String?
   discountType    String    // "percentage", "fixed"
-  discountValue   Float
-  minPurchase     Float?
-  maxDiscount     Float?
+  discountValue   Int
+  minPurchase     Int?
+  maxDiscount     Int?
   usageLimit      Int?
   usageCount      Int       @default(0)
   validFrom       DateTime

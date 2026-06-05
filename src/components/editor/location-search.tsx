@@ -32,14 +32,11 @@ export function LocationSearch({
     const searchLocation = async () => {
       setIsSearching(true);
       try {
-        // Using Mapbox Geocoding API
         const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-            query
-          )}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&limit=5`
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=fr`
         );
         const data = await response.json();
-        setResults(data.features || []);
+        setResults(data.map((r: any) => ({ id: r.place_id, place_name: r.display_name, text: r.display_name.split(',')[0], center: [parseFloat(r.lon), parseFloat(r.lat)] })));
         setShowResults(true);
       } catch (error) {
         console.error("Error searching location:", error);

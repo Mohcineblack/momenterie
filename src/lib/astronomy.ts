@@ -13,6 +13,35 @@ export interface ConstellationLine {
   to: { x: number; y: number };
 }
 
+export interface Constellation {
+  name: string;
+  stars: string[];
+  lines: [string, string][];
+}
+
+export interface StarMapParams {
+  date: Date;
+  latitude: number;
+  longitude: number;
+  width?: number;
+  height?: number;
+  showConstellations?: boolean;
+  magnitudeLimit?: number;
+}
+
+export interface StarMapData {
+  stars: StarPosition[];
+  constellations: Constellation[];
+  constellationLines: ConstellationLine[];
+  metadata: {
+    date: Date;
+    latitude: number;
+    longitude: number;
+    width: number;
+    height: number;
+  };
+}
+
 // Major bright stars with their coordinates (Right Ascension, Declination, Magnitude)
 const BRIGHT_STARS = [
   {
@@ -137,6 +166,42 @@ const BRIGHT_STARS = [
   },
 ];
 
+const CONSTELLATIONS: Constellation[] = [
+  {
+    name: "Orion",
+    stars: ["Betelgeuse", "Bellatrix", "Rigel"],
+    lines: [
+      ["Betelgeuse", "Bellatrix"],
+      ["Bellatrix", "Rigel"],
+    ],
+  },
+  {
+    name: "Gemini",
+    stars: ["Castor", "Pollux"],
+    lines: [["Castor", "Pollux"]],
+  },
+  {
+    name: "Lyra",
+    stars: ["Vega"],
+    lines: [],
+  },
+  {
+    name: "Canis Major",
+    stars: ["Sirius"],
+    lines: [],
+  },
+  {
+    name: "Ursa Major",
+    stars: [],
+    lines: [],
+  },
+  {
+    name: "Cassiopeia",
+    stars: [],
+    lines: [],
+  },
+];
+
 /**
  * Calculate star positions for a specific date, time, and location
  */
@@ -147,6 +212,10 @@ export function calculateStarPositions(
   canvasWidth: number = 800,
   canvasHeight: number = 600
 ): StarPosition[] {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return [];
+  }
+
   const observer = new astronomy.Observer(latitude, longitude, 0);
   const time = astronomy.MakeTime(date);
 
@@ -199,6 +268,41 @@ export function calculateStarPositions(
   }
 
   return positions;
+}
+
+export function getStarPositions(
+  date: Date,
+  latitude: number,
+  longitude: number,
+  canvasWidth: number = 800,
+  canvasHeight: number = 600
+): StarPosition[] {
+  return calculateStarPositions(date, latitude, longitude, canvasWidth, canvasHeight);
+}
+
+export function getConstellations(): Constellation[] {
+  return CONSTELLATIONS;
+}
+
+export function calculateStarMapData(params: StarMapParams): StarMapData {
+  const width = params.width ?? 800;
+  const height = params.height ?? 600;
+  const stars = getStarPositions(params.date, params.latitude, params.longitude, width, height)
+    .filter((star) => params.magnitudeLimit === undefined || star.magnitude <= params.magnitudeLimit);
+  const constellations = params.showConstellations === false ? [] : getConstellations();
+
+  return {
+    stars,
+    constellations,
+    constellationLines: params.showConstellations === false ? [] : generateConstellationLines(stars, width, height),
+    metadata: {
+      date: params.date,
+      latitude: params.latitude,
+      longitude: params.longitude,
+      width,
+      height,
+    },
+  };
 }
 
 /**

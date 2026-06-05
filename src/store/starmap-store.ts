@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { STARMAP_STYLES, type PosterStarStyle } from '@/lib/render/styles';
 
 export interface Location {
   lat: number;
@@ -6,79 +7,7 @@ export interface Location {
   placeName: string;
 }
 
-export interface StarMapStyle {
-  id: string;
-  name: string;
-  colors: {
-    background: string;
-    stars: string;
-    constellation: string;
-    text: string;
-  };
-}
-
-export const STARMAP_STYLES: StarMapStyle[] = [
-  {
-    id: 'classic',
-    name: 'Classic Night',
-    colors: {
-      background: '#0A1128',
-      stars: '#FFFFFF',
-      constellation: '#4A90E2',
-      text: '#FFFFFF',
-    },
-  },
-  {
-    id: 'navy',
-    name: 'Navy Blue',
-    colors: {
-      background: '#001F3F',
-      stars: '#FFD700',
-      constellation: '#87CEEB',
-      text: '#FFFFFF',
-    },
-  },
-  {
-    id: 'purple',
-    name: 'Purple Night',
-    colors: {
-      background: '#1A0B2E',
-      stars: '#FFFFFF',
-      constellation: '#B565D8',
-      text: '#E0BBE4',
-    },
-  },
-  {
-    id: 'red',
-    name: 'Red Sky',
-    colors: {
-      background: '#2C0000',
-      stars: '#FFE4B5',
-      constellation: '#FF6B6B',
-      text: '#FFE4B5',
-    },
-  },
-  {
-    id: 'minimal',
-    name: 'Minimal Black',
-    colors: {
-      background: '#000000',
-      stars: '#FFFFFF',
-      constellation: '#CCCCCC',
-      text: '#FFFFFF',
-    },
-  },
-  {
-    id: 'vintage',
-    name: 'Vintage Paper',
-    colors: {
-      background: '#F4ECD8',
-      stars: '#2C1810',
-      constellation: '#8B7355',
-      text: '#2C1810',
-    },
-  },
-];
+export type StarMapStyle = PosterStarStyle;
 
 interface StarMapState {
   location: Location | null;

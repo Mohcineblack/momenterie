@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "FUL-3: Submit order to Prodigi via Trigger.dev task (sandbox). Transform the existing no-op notifyPrintPartner task into a real Prodigi order submission. Includes FUL-4: status sync via a polling task.",
+  "status": "completed",
+  "steps": [
+    "Step 1 - Create src/lib/fulfillment/prodigi-client.ts: A typed HTTP client for Prodigi's REST API. Functions: submitOrder(payload: ProdigiOrderPayload): Promise<ProdigiOrderResponse> that POSTs to /v4.0/Orders. getOrder(prodigiOrderId: string): Promise<ProdigiOrderStatusResponse> that GETs /v4.0/Orders/{id}. Both use fetch with Authorization header (Bearer + API key). Type definitions for request/response payloads based on Prodigi API docs. Include proper error handling with typed error responses.",
+    "Step 2 - Rewrite src/trigger/order-tasks.ts notifyPrintPartner task: Rename to submitToProdigiTask (keep id 'notify-print-partner' for backward compat or update it to 'submit-to-prodigi'). Implementation: (a) Load order with items, variants, shippingAddress. (b) Guard: if order.prodigiOrderId is already set, return early (idempotency). (c) For each item: resolve Prodigi SKU via sku-mapping, get presigned URL via presign helper. (d) Build Prodigi order payload with shipping address, items, and merchant reference. (e) Call prodigi-client.submitOrder(). (f) On success: update Order with prodigiOrderId and supplierCostCents. (g) On failure: update Order.fulfillmentError with the error message, do NOT advance status. Use the existing idempotencyKey pattern from the trigger call site.",
+    "Step 3 - Create src/trigger/fulfillment-sync.ts: A scheduled Trigger.dev task (cron, every 30 min) that polls Prodigi for status updates on open orders. Implementation: (a) Find all orders where prodigiOrderId is set AND status is IN_PRODUCTION. (b) For each, call prodigi-client.getOrder(). (c) Map Prodigi status to OrderStatus: 'InProgress'->IN_PRODUCTION (no-op), 'Complete'/'Shipped'->SHIPPED, 'Cancelled'->flag with fulfillmentError. (d) When shipped: extract shipment.carrier and shipment.tracking.url, update Order with carrier, trackingUrl, shippedAt=now(), status=SHIPPED. (e) Idempotent: if Order already SHIPPED/DELIVERED, skip.",
+    "Step 4 - Create src/lib/fulfillment/__tests__/prodigi-client.test.ts: Mock global fetch. Test submitOrder builds correct request payload and headers. Test getOrder parses response correctly. Test error responses are handled properly.",
+    "Step 5 - Create src/trigger/__tests__/submit-to-prodigi.test.ts: Mock prisma, prodigi-client, sku-mapping, presign. Test: (a) successful submission stores prodigiOrderId, (b) idempotency guard (prodigiOrderId already set returns early without API call), (c) submission failure stores fulfillmentError, (d) unmapped SKU throws clear error.",
+    "Step 6 - Create src/trigger/__tests__/fulfillment-sync.test.ts: Mock prisma and prodigi-client. Test: (a) shipped status updates Order to SHIPPED with carrier+trackingUrl+shippedAt, (b) already-shipped orders are skipped, (c) cancelled orders get fulfillmentError set.",
+    "Step 7 - Update jest.config.js: Ensure the testMatch pattern includes src/trigger/__tests__/ files (current pattern src/**/__tests__/**/*.{js,jsx,ts,tsx} should already match)."
+  ],
+  "acceptance_criteria": [
+    "A paid+rendered order submits exactly once to Prodigi sandbox (guarded by prodigiOrderId check)",
+    "prodigiOrderId and supplierCostCents are stored on the Order after successful submission",
+    "A second trigger of the same order does NOT create a duplicate Prodigi order",
+    "Submission failure records fulfillmentError on the Order without advancing status",
+    "The fulfillment-sync task maps Prodigi shipped status to SHIPPED with carrier+trackingUrl+shippedAt",
+    "Repeated sync on an already-SHIPPED order is a no-op",
+    "All new tests pass"
+  ],
+  "verification": [
+    "npm run typecheck",
+    "npm run lint",
+    "npm test",
+    "npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": "All verification passed: typecheck, lint (0 errors), all 155 tests pass (18 suites), and build succeeds. The task mock pattern for tests requires casting the imported task to `any` then accessing `.run` since the Trigger.dev Task type does not expose run publicly. Used `mockResolvedValue` (not `mockResolvedValueOnce`) when a test has multiple expect().rejects.toThrow() calls against the same mock. The submitToProdigiTask uses task id 'submit-to-prodigi' (changed from 'notify-print-partner') and the trigger call in renderOrderItem was updated accordingly."
+}

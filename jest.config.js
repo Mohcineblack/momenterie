@@ -28,10 +28,7 @@ const customJestConfig = {
     '!src/app/**/layout.tsx',
     '!src/middleware.ts',
   ],
-  testMatch: [
-    '<rootDir>/**/__tests__/**/*.{js,jsx,ts,tsx}',
-    '<rootDir>/**/*.{spec,test}.{js,jsx,ts,tsx}',
-  ],
+  testMatch: ['<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}'],
   testPathIgnorePatterns: ['/node_modules/', '/.next/', '/e2e/'],
   transformIgnorePatterns: [
     '/node_modules/',

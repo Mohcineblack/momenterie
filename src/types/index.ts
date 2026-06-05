@@ -1,4 +1,5 @@
 import { User, Product, ProductVariant, Category, Order, OrderItem, Address, Review, Cart, CartItem } from '@prisma/client';
+import type { CitymapSpec, StarmapSpec } from '@/lib/render/spec';
 
 // Extended User type with session info
 export interface SessionUser {
@@ -127,6 +128,8 @@ export interface JewelryCustomization {
 }
 
 export type CustomizationData =
+  | CitymapSpec
+  | StarmapSpec
   | CityMapCustomization
   | StarMapCustomization
   | PuzzleCustomization

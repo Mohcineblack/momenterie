@@ -32,15 +32,15 @@ export default async function OrdersPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
+      case 'PENDING':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'processing':
+      case 'PROCESSING':
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'shipped':
+      case 'SHIPPED':
         return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'delivered':
+      case 'DELIVERED':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'cancelled':
+      case 'CANCELLED':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -48,19 +48,16 @@ export default async function OrdersPage() {
   };
 
   const getStatusText = (status: string) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
+    const normalized = status.toLowerCase().replace(/_/g, ' ');
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
-          <p className="text-gray-600">
-            Track and manage your orders
-          </p>
-        </div>
+    <div>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Mes commandes</h1>
+      </div>
 
         {orders.length === 0 ? (
           /* Empty State */
@@ -166,7 +163,6 @@ export default async function OrdersPage() {
             })}
           </div>
         )}
-      </div>
     </div>
   );
 }

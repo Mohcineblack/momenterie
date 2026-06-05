@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const updateOrderSchema = z.object({
   status: z
-    .enum(["pending", "processing", "shipped", "delivered", "cancelled"])
+    .enum(["PENDING", "PROCESSING", "IN_PRODUCTION", "SHIPPED", "DELIVERED", "CANCELLED"])
     .optional(),
   trackingNumber: z.string().nullable().optional(),
 });
