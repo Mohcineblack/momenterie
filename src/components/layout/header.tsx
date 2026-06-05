@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { useCartStore } from '@/store/cart-store';
 import { useState } from 'react';
+import { NavigationProgress } from './navigation-progress';
 
 export function Header() {
   const pathname = usePathname();
@@ -84,6 +85,7 @@ export function Header() {
           </Link>
         </div>
       )}
+      <NavigationProgress />
     </header>
   );
 }

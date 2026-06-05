@@ -1,27 +1,6 @@
-import mapboxgl from 'mapbox-gl';
-
-const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
-
-if (mapboxToken) {
-  mapboxgl.accessToken = mapboxToken;
-}
-
-function getMapboxToken() {
-  if (!process.env.NEXT_PUBLIC_MAPBOX_TOKEN) {
-    throw new Error('NEXT_PUBLIC_MAPBOX_TOKEN is not defined');
-  }
-
-  return process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-}
-
 export interface GeocodeResult {
   place_name: string;
   center: [number, number]; // [lng, lat]
-  bbox?: [number, number, number, number];
-  context?: Array<{
-    id: string;
-    text: string;
-  }>;
 }
 
 export interface GeocodeResponse {
@@ -30,94 +9,36 @@ export interface GeocodeResponse {
 }
 
 /**
- * Geocode a location query to get coordinates
+ * Geocode a location query using Nominatim (free)
  */
 export async function geocodeLocation(query: string): Promise<GeocodeResponse> {
-  try {
-    const token = getMapboxToken();
-    const response = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${token}&limit=5`
-    );
-
-    if (!response.ok) {
-      throw new Error('Geocoding failed');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error geocoding location:', error);
-    throw error;
-  }
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=fr`,
+    { headers: { 'User-Agent': 'Momenterie/1.0' } }
+  );
+  if (!res.ok) throw new Error('Geocoding failed');
+  const data = await res.json();
+  return {
+    type: 'FeatureCollection',
+    features: data.map((r: any) => ({
+      place_name: r.display_name,
+      center: [parseFloat(r.lon), parseFloat(r.lat)] as [number, number],
+    })),
+  };
 }
 
 /**
- * Reverse geocode coordinates to get address
+ * Reverse geocode coordinates using Nominatim (free)
  */
 export async function reverseGeocode(lng: number, lat: number): Promise<GeocodeResponse> {
-  try {
-    const token = getMapboxToken();
-    const response = await fetch(
-      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${token}`
-    );
-
-    if (!response.ok) {
-      throw new Error('Reverse geocoding failed');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error reverse geocoding:', error);
-    throw error;
-  }
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14&accept-language=fr`,
+    { headers: { 'User-Agent': 'Momenterie/1.0' } }
+  );
+  if (!res.ok) throw new Error('Reverse geocoding failed');
+  const data = await res.json();
+  return {
+    type: 'FeatureCollection',
+    features: [{ place_name: data.display_name, center: [lng, lat] }],
+  };
 }
-
-/**
- * Create a new Mapbox map instance
- */
-export function createMapInstance(
-  container: string | HTMLElement,
-  options: {
-    center: [number, number];
-    zoom: number;
-    style?: string;
-    interactive?: boolean;
-  }
-) {
-  mapboxgl.accessToken = getMapboxToken();
-
-  return new mapboxgl.Map({
-    container,
-    style: options.style || 'mapbox://styles/mapbox/streets-v12',
-    center: options.center,
-    zoom: options.zoom,
-    interactive: options.interactive !== false,
-  });
-}
-
-/**
- * Capture map as image (returns data URL)
- */
-export async function captureMapAsImage(map: mapboxgl.Map): Promise<string> {
-  return new Promise((resolve) => {
-    map.once('idle', () => {
-      const canvas = map.getCanvas();
-      resolve(canvas.toDataURL('image/png'));
-    });
-  });
-}
-
-/**
- * Available map styles
- */
-export const MAP_STYLES = {
-  streets: 'mapbox://styles/mapbox/streets-v12',
-  light: 'mapbox://styles/mapbox/light-v11',
-  dark: 'mapbox://styles/mapbox/dark-v11',
-  satellite: 'mapbox://styles/mapbox/satellite-v9',
-  satelliteStreets: 'mapbox://styles/mapbox/satellite-streets-v12',
-  outdoors: 'mapbox://styles/mapbox/outdoors-v12',
-  navigation: 'mapbox://styles/mapbox/navigation-day-v1',
-  navigationNight: 'mapbox://styles/mapbox/navigation-night-v1',
-} as const;
-
-export type MapStyle = keyof typeof MAP_STYLES;

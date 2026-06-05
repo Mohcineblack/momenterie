@@ -44,3 +44,247 @@
     color: var(--color-on-surface);
   }
 }
+
+
+/* ---------------------------------------------------------------- */
+/* Citymap editor markers                                           */
+/* ---------------------------------------------------------------- */
+.citymap-divicon {
+  background: transparent;
+  border: none;
+}
+.citymap-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+.citymap-marker svg {
+  display: block;
+}
+.citymap-marker__label {
+  margin-top: 2px;
+  font-family: "Galano Grotesque", system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #1a1a1a;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 1px 5px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.citymap-marker--photo {
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 3px solid #fff;
+  background: #fff;
+}
+.citymap-marker--photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+
+/* ---------------------------------------------------------------- */
+/* Citymap poster text layouts (faithful to momenterie source)      */
+/* ---------------------------------------------------------------- */
+.citymap-text {
+  box-sizing: border-box;
+  width: 100%;
+  word-break: break-word;
+}
+.citymap-text p {
+  margin: 0;
+  max-width: 100%;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+.citymap-text .cm-headline {
+  font-weight: 400;
+  text-transform: uppercase;
+}
+.citymap-text .cm-subtext {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.citymap-text .cm-subtitle,
+.citymap-text .cm-tagline {
+  font-size: 10px;
+  line-height: 1.4em;
+  text-align: center;
+}
+.citymap-text .cm-tagline { font-weight: 500; }
+
+/* --- centered layouts (retro / burger / regular) --- */
+.citymap-text.cm--retro,
+.citymap-text.cm--burger,
+.citymap-text.cm--regular {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 24px 24px;
+}
+.citymap-text.cm--retro .cm-headline,
+.citymap-text.cm--regular .cm-headline {
+  font-size: clamp(24px, 4.4vw, 34px);
+  line-height: 1.2em;
+  letter-spacing: 0.2em;
+  margin-left: 0.2em;
+}
+.citymap-text.cm--retro .cm-subtext,
+.citymap-text.cm--regular .cm-subtext,
+.citymap-text.cm--burger .cm-subtext { margin-top: 10px; gap: 4px; }
+
+/* burger: large serif (or script) headline, uppercase sub/tagline */
+.citymap-text.cm--burger .cm-headline {
+  font-size: clamp(30px, 6vw, 48px);
+  line-height: 1em;
+  letter-spacing: 0.08em;
+  margin: 4px 0;
+}
+.citymap-text.cm--burger .cm-subtitle,
+.citymap-text.cm--burger .cm-tagline {
+  font-size: 12px;
+  line-height: 1.4em;
+  text-transform: uppercase;
+}
+.citymap-text.cm--burger.cm--playful .cm-headline {
+  font-size: clamp(40px, 9vw, 72px);
+  line-height: 0.7em;
+  text-transform: none;
+}
+.citymap-text.cm--burger.cm--playful .cm-subtitle,
+.citymap-text.cm--burger.cm--playful .cm-tagline {
+  font-size: 28px;
+  line-height: 0.8em;
+  opacity: 0.65;
+}
+
+/* --- newspaper: decorative rules around the subtitle --- */
+.citymap-text.cm--newspaper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 24px 22px;
+}
+.citymap-text.cm--newspaper .cm-headline {
+  font-size: clamp(22px, 4vw, 32px);
+  line-height: 1.4em;
+  letter-spacing: 0.2em;
+  margin-left: 0.2em;
+}
+.citymap-text.cm--newspaper .cm-subtext { margin-top: 14px; gap: 10px; }
+.citymap-text.cm--newspaper .cm-subtitle {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.citymap-text.cm--newspaper .cm-subtitle--ruled {
+  position: relative;
+  display: inline-block;
+}
+.citymap-text.cm--newspaper .cm-subtitle--ruled::before,
+.citymap-text.cm--newspaper .cm-subtitle--ruled::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  height: 0.5px;
+  width: 32px;
+  transform: translateY(-50%);
+  background-color: rgb(var(--cm-fg));
+}
+.citymap-text.cm--newspaper .cm-subtitle--ruled::before { left: -48px; }
+.citymap-text.cm--newspaper .cm-subtitle--ruled::after { right: -48px; }
+.citymap-text.cm--newspaper .cm-tagline {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+/* --- dedication: two-column grid 56% / 44% --- */
+.citymap-text.cm--dedication {
+  display: grid;
+  grid-template-columns: calc(56% - 10px) calc(44% - 10px);
+  column-gap: 20px;
+  padding: 20px;
+}
+.citymap-text.cm--dedication .cm-left {
+  display: flex;
+  flex-direction: column;
+}
+.citymap-text.cm--dedication .cm-headline {
+  font-weight: 500;
+  line-height: 1.2em;
+  letter-spacing: 0.2em;
+  font-size: clamp(22px, 4.4vw, 34px);
+  text-align: left;
+}
+.citymap-text.cm--dedication .cm-left p { text-align: left; }
+.citymap-text.cm--dedication .cm-subtitle,
+.citymap-text.cm--dedication .cm-tagline {
+  font-size: 10px;
+  line-height: 1.4em;
+  margin-top: 4px;
+}
+.citymap-text.cm--dedication .cm-dedication {
+  align-self: center;
+  font-size: 10px;
+  line-height: 1.4em;
+  letter-spacing: 0.05em;
+  white-space: pre-wrap;
+  text-align: left;
+}
+.citymap-text.cm--dedication.cm--playful .cm-headline {
+  line-height: 0.7;
+  text-transform: none;
+}
+
+
+/* ---------------------------------------------------------------- */
+/* Citymap gradient overlay (exact CSS from momenterie source)      */
+/* ---------------------------------------------------------------- */
+.citymap-gradient {
+  --gradient-color: var(--cm-gradient-color);
+  height: calc(100% + 2px);
+  left: -1px;
+  top: -1px;
+  width: calc(100% + 2px);
+  pointer-events: none;
+  position: absolute;
+}
+.citymap-gradient.gradient--bottom {
+  background: linear-gradient(rgba(var(--gradient-color), 0) 47.5%, rgb(var(--gradient-color)) 88.125%);
+}
+.citymap-gradient.gradient--top-bottom {
+  background: linear-gradient(rgb(var(--gradient-color)) 1.375%, rgba(var(--gradient-color), 0) 32.75% 66.25%, rgb(var(--gradient-color)) 98.625%);
+}
+.citymap-gradient.gradient--around {
+  border-radius: 40%;
+  box-sizing: border-box;
+  filter: blur(70px);
+  left: 50%;
+  height: calc(100% - 240px);
+  outline: 1000px solid rgb(var(--gradient-color));
+  position: absolute;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 160px);
+}
+
+
+/* ---------------------------------------------------------------- */
+/* Citymap font aliases (map source font names → loaded faces)      */
+/* ---------------------------------------------------------------- */
+:root {
+  --citymap-cormorant: var(--font-cormorant), "Cormorant Garamond", serif;
+  --citymap-amatic: var(--font-amatic), "Amatic SC", cursive;
+  --citymap-gruppo: var(--font-gruppo), "Gruppo", sans-serif;
+  --citymap-galano: var(--font-geist), system-ui, sans-serif;
+  --citymap-script: var(--font-script), "Great Vibes", cursive;
+}
