@@ -2,9 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingCart, User, Search, Menu } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useCartStore } from '@/store/cart-store';
-import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
 export function Header() {
@@ -16,99 +15,75 @@ export function Header() {
   const navigation = [
     { name: 'City Maps', href: '/collections/city-maps' },
     { name: 'Star Maps', href: '/collections/star-maps' },
-    { name: 'Idées cadeaux', href: '/occasions' },
-    { name: 'All Products', href: '/collections/all' },
+    { name: 'Id\u00e9es cadeaux', href: '/occasions' },
+    { name: 'Collections', href: '/collections/all' },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold text-gray-900">Momenterie</span>
+    <header className="fixed top-0 w-full z-50 bg-surface/95 backdrop-blur border-b border-outline-variant">
+      <div className="flex justify-between items-center px-6 md:px-[48px] py-4 max-w-[1280px] mx-auto h-[72px]">
+        {/* Brand */}
+        <Link href="/" className="flex items-center">
+          <span className="font-serif text-2xl font-semibold tracking-tight italic text-primary">Momenterie</span>
+        </Link>
+
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex space-x-8">
+          {navigation.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`font-sans text-[11px] uppercase tracking-[0.15em] font-medium transition-colors ${
+                pathname === item.href ? 'text-primary' : 'text-on-surface-variant hover:text-primary'
+              }`}
+            >
+              {item.name}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Actions */}
+        <div className="flex items-center space-x-6 font-sans text-[11px] uppercase tracking-[0.15em] font-medium text-primary">
+          <Link href="/search" className="hover:text-secondary transition-colors hidden md:block">
+            Search
           </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'text-sm font-medium transition-colors hover:text-gray-900',
-                  pathname === item.href
-                    ? 'text-gray-900'
-                    : 'text-gray-600'
-                )}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Actions */}
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/search"
-              className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
-              aria-label="Search"
-            >
-              <Search className="h-5 w-5" />
-            </Link>
-
-            <Link
-              href="/account"
-              className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
-              aria-label="Account"
-            >
-              <User className="h-5 w-5" />
-            </Link>
-
-            <button
-              onClick={openCart}
-              className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
-              aria-label="Shopping cart"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {cartItemsCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900 text-xs text-white">
-                  {cartItemsCount}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors"
-              aria-label="Menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-          </div>
+          <button onClick={openCart} className="hover:text-secondary transition-colors relative">
+            Cart ({cartItemsCount})
+          </button>
+          <Link href="/account" className="hover:text-secondary transition-colors hidden md:block">
+            Account
+          </Link>
+          <button
+            className="md:hidden text-on-surface-variant hover:text-primary transition-colors"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5 stroke-[1.5]" /> : <Menu className="w-5 h-5 stroke-[1.5]" />}
+          </button>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <nav className="md:hidden py-4 space-y-2 border-t">
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  'block px-4 py-2 text-sm font-medium rounded-lg transition-colors',
-                  pathname === item.href
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50'
-                )}
-              >
-                {item.name}
-              </Link>
-            ))}
-          </nav>
-        )}
       </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-outline-variant bg-surface px-6 py-6 space-y-4">
+          {navigation.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className="block font-sans text-[11px] uppercase tracking-[0.15em] font-medium text-on-surface-variant hover:text-primary transition-colors"
+            >
+              {item.name}
+            </Link>
+          ))}
+          <Link
+            href="/account"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block font-sans text-[11px] uppercase tracking-[0.15em] font-medium text-on-surface-variant hover:text-primary transition-colors"
+          >
+            Account
+          </Link>
+        </div>
+      )}
     </header>
   );
 }

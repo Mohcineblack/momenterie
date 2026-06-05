@@ -1,150 +1,47 @@
 import Link from 'next/link';
-import { Facebook, Instagram, Twitter, Mail } from 'lucide-react';
-import { NewsletterSignup } from '@/components/newsletter/newsletter-signup';
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
-
-  const footerSections = [
-    {
-      title: 'Shop',
-      links: [
-        { name: 'City Maps', href: '/collections/city-maps' },
-        { name: 'Star Maps', href: '/collections/star-maps' },
-        { name: 'Puzzles', href: '/collections/puzzles' },
-        { name: 'Jewelry', href: '/collections/jewelry' },
-        { name: 'All Products', href: '/collections/all' },
-      ],
-    },
-    {
-      title: 'Company',
-      links: [
-        { name: 'About Us', href: '/about' },
-        { name: 'Careers', href: '/careers' },
-        { name: 'Reviews', href: '/reviews' },
-        { name: 'Contact', href: '/contact' },
-      ],
-    },
-    {
-      title: 'Support',
-      links: [
-        { name: 'FAQ', href: '/faq' },
-        { name: 'Shipping Policy', href: '/shipping-policy' },
-        { name: 'Happiness Guarantee', href: '/happiness-guarantee' },
-        { name: 'Track Order', href: '/orders/track' },
-      ],
-    },
-    {
-      title: 'Legal',
-      links: [
-        { name: 'Mentions l\u00e9gales', href: '/legal/mentions-legales' },
-        { name: 'CGV', href: '/legal/cgv' },
-        { name: 'Confidentialit\u00e9', href: '/legal/confidentialite' },
-        { name: 'Livraison', href: '/legal/livraison' },
-        { name: 'R\u00e9tractation', href: '/legal/retractation' },
-      ],
-    },
-  ];
-
   return (
-    <footer className="bg-gray-50 border-t">
-      <div className="container mx-auto px-4 py-12">
-        {/* Newsletter Section */}
-        <div className="mb-12 max-w-md mx-auto text-center">
-          <h3 className="text-lg font-semibold mb-2">Stay in the loop</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Subscribe to receive updates, exclusive offers, and more.
+    <footer className="w-full py-24 border-t border-outline-variant bg-surface-container-lowest text-on-surface mt-auto">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-12 px-6 md:px-[48px] max-w-[1280px] mx-auto">
+        <div className="col-span-1 flex flex-col gap-6">
+          <span className="font-serif text-2xl font-semibold italic tracking-tight text-primary">Momenterie</span>
+          <p className="font-serif italic text-sm text-on-surface-variant max-w-xs">
+            Museum Quality Guaranteed.<br/>
+            Personalized art that endures.
           </p>
-          <NewsletterSignup variant="compact" />
         </div>
 
-        {/* Links Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-          {footerSections.map((section) => (
-            <div key={section.title}>
-              <h4 className="font-semibold mb-4 text-gray-900">{section.title}</h4>
-              <ul className="space-y-2">
-                {section.links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+        <div className="col-span-1 flex flex-col gap-4">
+          <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Explorer</h4>
+          <Link href="/collections/city-maps" className="font-sans text-sm text-on-surface-variant hover:text-primary transition-colors">City Maps</Link>
+          <Link href="/collections/star-maps" className="font-sans text-sm text-on-surface-variant hover:text-primary transition-colors">Star Maps</Link>
+          <Link href="/collections/all" className="font-sans text-sm text-on-surface-variant hover:text-primary transition-colors">Collections</Link>
+          <Link href="/occasions" className="font-sans text-sm text-on-surface-variant hover:text-primary transition-colors">Id&eacute;es cadeaux</Link>
         </div>
 
-        {/* Social Links */}
-        <div className="flex justify-center space-x-6 mb-8">
-          <a
-            href="https://facebook.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-600 hover:text-gray-900 transition-colors"
-            aria-label="Facebook"
-          >
-            <Facebook className="h-5 w-5" />
-          </a>
-          <a
-            href="https://instagram.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-600 hover:text-gray-900 transition-colors"
-            aria-label="Instagram"
-          >
-            <Instagram className="h-5 w-5" />
-          </a>
-          <a
-            href="https://twitter.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-600 hover:text-gray-900 transition-colors"
-            aria-label="Twitter"
-          >
-            <Twitter className="h-5 w-5" />
-          </a>
-          <a
-            href="mailto:support@momenterie.com"
-            className="text-gray-600 hover:text-gray-900 transition-colors"
-            aria-label="Email"
-          >
-            <Mail className="h-5 w-5" />
-          </a>
+        <div className="col-span-1 flex flex-col gap-4">
+          <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Support</h4>
+          <Link href="/faq" className="font-sans text-sm text-on-surface-variant hover:text-primary transition-colors">FAQ</Link>
+          <Link href="/legal/livraison" className="font-sans text-sm text-on-surface-variant hover:text-primary transition-colors">Livraison</Link>
+          <Link href="/account/orders" className="font-sans text-sm text-on-surface-variant hover:text-primary transition-colors">Suivre ma commande</Link>
         </div>
 
-        {/* Trust Badges */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 max-w-3xl mx-auto">
-          <div className="text-center">
-            <div className="text-2xl mb-1">🚚</div>
-            <p className="text-xs font-medium">Free Shipping</p>
-            <p className="text-xs text-gray-600">Over €50</p>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl mb-1">😊</div>
-            <p className="text-xs font-medium">100% Satisfaction</p>
-            <p className="text-xs text-gray-600">Guaranteed</p>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl mb-1">🔒</div>
-            <p className="text-xs font-medium">Secure Payment</p>
-            <p className="text-xs text-gray-600">SSL Protected</p>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl mb-1">⭐</div>
-            <p className="text-xs font-medium">4.9/5 Rating</p>
-            <p className="text-xs text-gray-600">10,000+ Reviews</p>
-          </div>
+        <div className="col-span-1 flex flex-col gap-4">
+          <h4 className="font-sans text-[10px] font-bold uppercase tracking-widest text-primary mb-2">L&eacute;gal</h4>
+          <Link href="/legal/mentions-legales" className="font-sans text-sm text-on-surface-variant hover:text-primary transition-colors">Mentions l&eacute;gales</Link>
+          <Link href="/legal/cgv" className="font-sans text-sm text-on-surface-variant hover:text-primary transition-colors">CGV</Link>
+          <Link href="/legal/confidentialite" className="font-sans text-sm text-on-surface-variant hover:text-primary transition-colors">Confidentialit&eacute;</Link>
+          <Link href="/legal/retractation" className="font-sans text-sm text-on-surface-variant hover:text-primary transition-colors">R&eacute;tractation</Link>
         </div>
+      </div>
 
-        {/* Copyright */}
-        <div className="text-center text-sm text-gray-600 border-t pt-8">
-          <p>© {currentYear} Momenterie. All rights reserved.</p>
-          <p className="mt-2">Made with ❤️ for preserving special moments</p>
+      <div className="px-6 md:px-[48px] max-w-[1280px] mx-auto mt-16 pt-8 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.2em] font-medium text-on-surface-variant">
+        <p>&copy; 2026 Momenterie. TVA non applicable, art. 293 B du CGI.</p>
+        <div className="flex gap-8">
+          <span>Instagram</span>
+          <Link href="/legal/confidentialite">Privacy</Link>
+          <Link href="/legal/cgv">Terms</Link>
         </div>
       </div>
     </footer>

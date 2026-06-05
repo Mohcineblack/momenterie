@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Playfair_Display } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -8,19 +9,26 @@ import { CartDrawer } from "@/components/cart/cart-drawer";
 import { NewsletterPopup } from "@/components/newsletter/newsletter-popup";
 import { Toaster } from "sonner";
 
-const inter = Inter({
+const playfair = Playfair_Display({
   subsets: ["latin"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Momenterie - Personalized Gifts & Custom Maps",
-  description: "Create beautiful personalized gifts: custom city maps, star maps, photo puzzles, jewelry, and more. Preserve your special moments forever.",
+  title: "Momenterie | Museum Quality Keepsakes",
+  description: "Premium personalized maps, star charts, and jewelry designed for the spaces that matter most.",
   keywords: ["personalized gifts", "custom maps", "star maps", "city maps", "photo puzzles", "custom jewelry"],
   authors: [{ name: "Momenterie" }],
   openGraph: {
-    title: "Momenterie - Personalized Gifts & Custom Maps",
-    description: "Create beautiful personalized gifts: custom city maps, star maps, photo puzzles, jewelry, and more.",
+    title: "Momenterie | Museum Quality Keepsakes",
+    description: "Premium personalized maps, star charts, and jewelry designed for the spaces that matter most.",
     type: "website",
   },
 };
@@ -31,11 +39,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.className}>
-      <body className="min-h-screen flex flex-col antialiased">
+    <html lang="fr" className={`${playfair.variable} ${geist.variable} antialiased`}>
+      <body className="min-h-screen flex flex-col font-sans">
         <AnnouncementBar />
         <Header />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 flex flex-col pt-[72px]">{children}</main>
         <Footer />
         <CartDrawer />
         <NewsletterPopup />
