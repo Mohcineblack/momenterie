@@ -148,25 +148,53 @@ export function CityMapEditor() {
     if (!m || !m.isStyleLoaded()) return;
 
     const colors = mapStyle.colors;
+    const layers = m.getStyle()?.layers || [];
+
     try {
-      m.setPaintProperty('background', 'background-color', colors.land);
-      m.getLayer('water') && m.setPaintProperty('water', 'fill-color', colors.water);
+      // Set background
+      if (m.getLayer('background')) m.setPaintProperty('background', 'background-color', colors.land);
 
-      const roadLayers = ['road-street', 'road-minor', 'road-secondary-tertiary', 'road-simple'];
-      roadLayers.forEach(id => { m.getLayer(id) && m.setPaintProperty(id, 'line-color', colors.roads); });
+      for (const layer of layers) {
+        const id = layer.id;
+        const type = layer.type;
 
-      const majorRoadLayers = ['road-primary', 'road-motorway-trunk', 'road-major-link'];
-      majorRoadLayers.forEach(id => { m.getLayer(id) && m.setPaintProperty(id, 'line-color', colors.majorRoads); });
+        // Hide all POI, label, icon layers for a clean map look
+        if (type === 'symbol') {
+          m.setLayoutProperty(id, 'visibility', 'none');
+          continue;
+        }
 
-      m.getLayer('building') && m.setPaintProperty('building', 'fill-color', colors.buildings);
+        // Water fills
+        if (id.includes('water') && type === 'fill') {
+          m.setPaintProperty(id, 'fill-color', colors.water);
+          continue;
+        }
 
-      const landuseLayers = ['landuse', 'national-park', 'landcover'];
-      landuseLayers.forEach(id => { m.getLayer(id) && m.setPaintProperty(id, 'fill-color', colors.landuse); });
+        // Road lines
+        if ((id.includes('road') || id.includes('bridge') || id.includes('tunnel')) && type === 'line') {
+          const isMajor = id.includes('motorway') || id.includes('trunk') || id.includes('primary');
+          m.setPaintProperty(id, 'line-color', isMajor ? colors.majorRoads : colors.roads);
+          m.setPaintProperty(id, 'line-opacity', 0.9);
+          continue;
+        }
 
-      const labelLayers = m.getStyle()?.layers?.filter(l => l.type === 'symbol') || [];
-      labelLayers.forEach(l => {
-        try { m.setPaintProperty(l.id, 'text-color', colors.text); } catch {}
-      });
+        // Building fills
+        if (id.includes('building') && type === 'fill') {
+          m.setPaintProperty(id, 'fill-color', colors.buildings);
+          continue;
+        }
+
+        // Landuse/landcover/park fills
+        if ((id.includes('landuse') || id.includes('landcover') || id.includes('park') || id.includes('national')) && type === 'fill') {
+          m.setPaintProperty(id, 'fill-color', colors.landuse);
+          continue;
+        }
+
+        // Hide everything else that's a fill we didn't handle (transit, etc)
+        if (type === 'fill' && !id.includes('water') && !id.includes('building') && !id.includes('land')) {
+          m.setPaintProperty(id, 'fill-opacity', 0.3);
+        }
+      }
     } catch {}
   }
 
