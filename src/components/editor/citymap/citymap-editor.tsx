@@ -20,7 +20,7 @@ export function CityMapEditor() {
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
 
-  const { location, setLocation, setZoom, zoom, mapStyle } = useCityMapStore();
+  const { location, setLocation, setZoom, zoom, mapStyle, colorVariant } = useCityMapStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -141,13 +141,13 @@ export function CityMapEditor() {
   // Apply map style colors when style changes
   useEffect(() => {
     applyStyleColors();
-  }, [mapStyle.id]);
+  }, [mapStyle.id, colorVariant?.id]);
 
   function applyStyleColors() {
     const m = map.current;
     if (!m || !m.isStyleLoaded()) return;
 
-    const colors = mapStyle.colors;
+    const colors = colorVariant?.colors ?? mapStyle.colors;
     const layers = m.getStyle()?.layers || [];
 
     try {

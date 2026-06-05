@@ -12,7 +12,7 @@ describe("production renderers", () => {
       location: { lat: 48.8566, lng: 2.3522, placeName: "Paris" },
       zoom: 13,
       bearing: 0,
-      mapStyleId: "classic",
+      mapStyleId: "leon",
       title: "Paris",
       subtitle: "Where it started",
       date: "June 3, 2026",

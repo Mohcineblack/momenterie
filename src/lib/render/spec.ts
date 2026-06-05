@@ -64,7 +64,7 @@ export const citymapSpecSchema = z.object({
   }),
   zoom: z.number().min(1).max(20).default(13),
   bearing: z.number().default(0),
-  mapStyleId: z.string().default("classic"),
+  mapStyleId: z.string().default("leon"),
   title: z.string().default(""),
   subtitle: z.string().default(""),
   date: z.string().default(""),

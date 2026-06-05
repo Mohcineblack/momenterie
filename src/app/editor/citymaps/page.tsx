@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import { useCartStore } from "@/store/cart-store";
 import { formatPrice } from "@/lib/utils";
 import type { CitymapSpec } from "@/lib/render/spec";
-import { MapPin, Palette, Type, ArrowRight, ZoomIn, ZoomOut, Search } from "lucide-react";
-import { MAP_STYLES } from "@/lib/render/styles";
+import { MapPin, Palette, Type, ArrowRight, ZoomIn, ZoomOut, Search, Heart } from "lucide-react";
+import { MAP_STYLES, TEXT_LAYOUTS } from "@/lib/render/styles";
 import { FrameUpsell } from "@/components/editor/frame-upsell";
 import mapboxgl from "mapbox-gl";
 
@@ -19,7 +19,7 @@ function CityMapEditorPage() {
   const productSlug = searchParams.get("product");
 
   const { addItem } = useCartStore();
-  const { location, title, subtitle, date, mapStyle, zoom, setTitle, setSubtitle, setDate, setMapStyle, setZoom, setLocation } = useCityMapStore();
+  const { location, title, subtitle, date, mapStyle, zoom, textLayout, colorVariant, setTitle, setSubtitle, setDate, setMapStyle, setZoom, setLocation, setTextLayout, setColorVariant } = useCityMapStore();
 
   const [mounted, setMounted] = useState(false);
   const [product, setProduct] = useState<any>(null);
@@ -97,6 +97,7 @@ function CityMapEditorPage() {
   if (!mounted) return <div className="min-h-screen flex items-center justify-center bg-surface"><p className="font-sans text-on-surface-variant">Loading...</p></div>;
 
   const currentPrice = product ? product.basePrice + (selectedVariant?.priceModifier || 0) : 0;
+  const activeColors = colorVariant?.colors ?? mapStyle.colors;
 
   const formatCoords = (lat: number, lng: number) =>
     `${Math.abs(lat).toFixed(4)}\u00b0 ${lat >= 0 ? "N" : "S"}, ${Math.abs(lng).toFixed(4)}\u00b0 ${lng >= 0 ? "E" : "W"}`;
@@ -109,17 +110,77 @@ function CityMapEditorPage() {
         <div className="w-full max-w-[560px] bg-white border border-outline-variant shadow-xl">
           {/* Map area */}
           <div className="relative w-full" style={{ aspectRatio: "4/5" }}>
-            <CityMapEditorComponent />
+            {mapStyle.mask === "heart" && (
+              <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+                <defs>
+                  <clipPath id="heart-clip" clipPathUnits="objectBoundingBox">
+                    <path d="M0.5,0.9 C0.5,0.9 0.05,0.6 0.05,0.35 C0.05,0.15 0.2,0.05 0.35,0.15 C0.42,0.2 0.48,0.28 0.5,0.35 C0.52,0.28 0.58,0.2 0.65,0.15 C0.8,0.05 0.95,0.15 0.95,0.35 C0.95,0.6 0.5,0.9 0.5,0.9 Z" />
+                  </clipPath>
+                </defs>
+              </svg>
+            )}
+            <div
+              className="w-full h-full"
+              style={mapStyle.mask === "heart" ? { clipPath: "url(#heart-clip)" } : undefined}
+            >
+              <CityMapEditorComponent />
+            </div>
+            {mapStyle.mask === "heart" && (
+              <div className="absolute inset-0 pointer-events-none z-20">
+                <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <path
+                    d="M50,90 C50,90 5,60 5,35 C5,15 20,5 35,15 C42,20 48,28 50,35 C52,28 58,20 65,15 C80,5 95,15 95,35 C95,60 50,90 50,90 Z"
+                    fill="none"
+                    stroke={mapStyle.colors.text}
+                    strokeWidth="0.5"
+                  />
+                </svg>
+              </div>
+            )}
           </div>
 
           {/* Title area below map */}
-          <div className="px-6 py-6 text-center border-t border-outline-variant bg-white">
-            <h2 className="font-serif text-2xl md:text-3xl font-bold text-primary uppercase tracking-[0.15em]">
-              {title || "PARIS"}
-            </h2>
-            <p className="font-sans text-[10px] mt-2 text-on-surface-variant tracking-[0.15em]">
-              {subtitle || (location ? formatCoords(location.lat, location.lng) : "")}
-            </p>
+          <div className="px-6 py-6 text-center border-t border-outline-variant" style={{ backgroundColor: activeColors.background }}>
+            {textLayout === "cursive" ? (
+              <>
+                <h2 className="font-serif text-2xl md:text-3xl italic" style={{ color: activeColors.text }}>
+                  {title || "Paris"}
+                </h2>
+                <p className="font-sans text-[10px] mt-2 tracking-[0.15em]" style={{ color: activeColors.text, opacity: 0.6 }}>
+                  {subtitle || (location ? formatCoords(location.lat, location.lng) : "")}
+                </p>
+              </>
+            ) : textLayout === "verbose" ? (
+              <>
+                <div className="flex items-center gap-2 justify-center mb-2">
+                  <span className="flex-1 h-px" style={{ backgroundColor: activeColors.text, opacity: 0.3 }} />
+                  <span className="font-sans text-[8px] uppercase tracking-[0.2em]" style={{ color: activeColors.text, opacity: 0.5 }}>★</span>
+                  <span className="flex-1 h-px" style={{ backgroundColor: activeColors.text, opacity: 0.3 }} />
+                </div>
+                <h2 className="font-serif text-3xl md:text-4xl font-bold uppercase tracking-[0.2em]" style={{ color: activeColors.text }}>
+                  {title || "PARIS"}
+                </h2>
+                <p className="font-sans text-[10px] mt-2 tracking-[0.15em]" style={{ color: activeColors.text, opacity: 0.6 }}>
+                  {subtitle || (location ? formatCoords(location.lat, location.lng) : "")}
+                </p>
+                {date && <p className="font-sans text-[9px] mt-1 tracking-[0.1em]" style={{ color: activeColors.text, opacity: 0.4 }}>{date}</p>}
+              </>
+            ) : textLayout === "minimal" ? (
+              <>
+                <h2 className="font-sans text-lg md:text-xl font-light uppercase tracking-[0.3em]" style={{ color: activeColors.text }}>
+                  {title || "PARIS"}
+                </h2>
+              </>
+            ) : (
+              <>
+                <h2 className="font-serif text-2xl md:text-3xl font-bold uppercase tracking-[0.15em]" style={{ color: activeColors.text }}>
+                  {title || "PARIS"}
+                </h2>
+                <p className="font-sans text-[10px] mt-2 tracking-[0.15em]" style={{ color: activeColors.text, opacity: 0.6 }}>
+                  {subtitle || (location ? formatCoords(location.lat, location.lng) : "")}
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -186,26 +247,69 @@ function CityMapEditorPage() {
             <h3 className="flex items-center gap-2 font-sans text-[11px] uppercase tracking-[0.15em] font-bold text-primary mb-4">
               <Palette className="w-4 h-4" /> 2. Style
             </h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-2">
               {MAP_STYLES.map((style) => (
                 <button
                   key={style.id}
                   onClick={() => setMapStyle(style)}
-                  className={`relative aspect-square border-2 transition-colors ${
+                  className={`relative border-2 transition-colors ${
                     mapStyle.id === style.id ? "border-primary" : "border-outline-variant hover:border-on-surface-variant"
                   }`}
                 >
-                  <div className="w-full h-full" style={{ backgroundColor: style.colors.land }}>
-                    <div className="absolute inset-2 opacity-60" style={{ background: `linear-gradient(135deg, ${style.colors.roads} 1px, transparent 1px), linear-gradient(45deg, ${style.colors.majorRoads} 1px, transparent 1px)`, backgroundSize: "8px 8px" }} />
-                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1/2 h-1" style={{ backgroundColor: style.colors.text }} />
+                  <div className="aspect-square relative overflow-hidden" style={{ backgroundColor: style.colors.land }}>
+                    {style.mask === "heart" && (
+                      <Heart className="absolute inset-0 m-auto w-5 h-5 text-primary opacity-40" />
+                    )}
+                    <div className="absolute inset-1 opacity-50" style={{ background: `linear-gradient(135deg, ${style.colors.roads} 1px, transparent 1px), linear-gradient(45deg, ${style.colors.majorRoads} 1px, transparent 1px)`, backgroundSize: "6px 6px" }} />
+                    <div className="absolute bottom-0 left-0 right-0 h-1/4" style={{ backgroundColor: style.colors.water, opacity: 0.6 }} />
                   </div>
+                  <p className="text-[9px] font-medium text-center py-1 truncate">{style.name}</p>
                   {mapStyle.id === style.id && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                      <svg className="w-3 h-3 text-on-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-on-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>
                     </div>
                   )}
                 </button>
               ))}
+            </div>
+
+            {/* Color Variants */}
+            {mapStyle.colorVariants.length > 0 && (
+              <div className="mt-4">
+                <p className="font-sans text-[10px] uppercase tracking-[0.15em] font-bold text-primary mb-2">Personnaliser la couleur</p>
+                <div className="flex flex-wrap gap-2">
+                  {mapStyle.colorVariants.map((variant) => {
+                    const isActive = colorVariant?.id === variant.id || (!colorVariant && variant.colors.water === mapStyle.colors.water);
+                    return (
+                      <button
+                        key={variant.id}
+                        onClick={() => setColorVariant(variant)}
+                        title={variant.label}
+                        className={`w-7 h-7 rounded-full border-2 transition-all ${isActive ? "border-primary scale-110" : "border-outline-variant hover:border-on-surface-variant"}`}
+                        style={{ background: `linear-gradient(135deg, ${variant.colors.land} 50%, ${variant.colors.water} 50%)` }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Text Layout */}
+            <div className="mt-4">
+              <p className="font-sans text-[10px] uppercase tracking-[0.15em] font-bold text-primary mb-2">Disposition du texte</p>
+              <div className="grid grid-cols-2 gap-2">
+                {TEXT_LAYOUTS.map((layout) => (
+                  <button
+                    key={layout.id}
+                    onClick={() => setTextLayout(layout.id)}
+                    className={`px-3 py-2 border text-[10px] font-medium transition-colors ${
+                      textLayout === layout.id ? "border-primary bg-primary text-on-primary" : "border-outline-variant text-primary hover:border-on-surface-variant"
+                    }`}
+                  >
+                    {layout.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
