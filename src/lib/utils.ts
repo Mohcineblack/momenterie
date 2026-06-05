@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/shipping-config";
 
 /**
  * Merge Tailwind CSS classes with proper precedence
@@ -148,8 +149,8 @@ export function generateOrderNumber(): string {
  * Calculate shipping cost based on country and total
  */
 export function calculateShippingCost(country: string, totalCents: number): number {
-  // Free shipping over €50
-  if (totalCents >= 5000) return 0;
+  // Free shipping over threshold
+  if (totalCents >= FREE_SHIPPING_THRESHOLD_CENTS) return 0;
 
   // EU countries
   const euCountries = ['DE', 'AT', 'FR', 'BE', 'NL', 'IT', 'ES', 'PT', 'PL', 'CZ', 'DK', 'SE'];
@@ -177,7 +178,18 @@ export const DESTINATION_VAT_RATES: Record<string, number> = {
   BE: 0.21,
 };
 
+/** VAT mode: 'franchise_en_base' = 0 tax (micro-entreprise), 'standard' = destination rates */
+export type VatMode = 'franchise_en_base' | 'standard';
+
+export function getVatMode(): VatMode {
+  return (process.env.NEXT_PUBLIC_VAT_MODE as VatMode) || 'franchise_en_base';
+}
+
+/** Legal mention required under franchise en base de TVA */
+export const VAT_LEGAL_MENTION = 'TVA non applicable, article 293 B du CGI';
+
 export function calculateTax(subtotalCents: number, country: string): number {
+  if (getVatMode() === 'franchise_en_base') return 0;
   const rate = DESTINATION_VAT_RATES[country.toUpperCase()] ?? 0;
   return Math.round(subtotalCents * rate);
 }

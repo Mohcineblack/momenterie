@@ -37,10 +37,11 @@ export function Footer() {
     {
       title: 'Legal',
       links: [
-        { name: 'Privacy Policy', href: '/privacy' },
-        { name: 'Terms of Service', href: '/terms' },
-        { name: 'Refund Policy', href: '/policies/refund-policy' },
-        { name: 'Legal Notice', href: '/policies/legal-notice' },
+        { name: 'Mentions l\u00e9gales', href: '/legal/mentions-legales' },
+        { name: 'CGV', href: '/legal/cgv' },
+        { name: 'Confidentialit\u00e9', href: '/legal/confidentialite' },
+        { name: 'Livraison', href: '/legal/livraison' },
+        { name: 'R\u00e9tractation', href: '/legal/retractation' },
       ],
     },
   ];

@@ -1,5 +1,9 @@
 import { calculateTax, DESTINATION_VAT_RATES } from "@/lib/utils";
 
+// Tax tests validate the destination VAT table in "standard" mode
+beforeAll(() => { process.env.NEXT_PUBLIC_VAT_MODE = "standard"; });
+afterAll(() => { delete process.env.NEXT_PUBLIC_VAT_MODE; });
+
 describe("destination VAT", () => {
   it.each([
     ["NL", 2100],

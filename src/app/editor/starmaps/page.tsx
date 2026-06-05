@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { EditorHeader } from "@/components/editor/editor-header";
 import { StarMapControls } from "@/components/editor/starmap/starmap-controls";
 import { StarMapPreview } from "@/components/editor/starmap/starmap-preview";
+import { FrameUpsell } from "@/components/editor/frame-upsell";
 import { useStarMapStore } from "@/store/starmap-store";
 import { useCartStore } from "@/store/cart-store";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ function StarMapEditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [product, setProduct] = useState<any>(null);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [frameColor, setFrameColor] = useState('black');
 
   useEffect(() => {
     setMounted(true);
@@ -132,8 +134,9 @@ function StarMapEditorPage() {
         showGrid,
         showMilkyWay: true,
         magnitudeLimit: 6.5,
-        size: "30x40",
-        material: "poster",
+        size: selectedVariant.size || "30x40",
+        material: (selectedVariant.material || "poster").toLowerCase(),
+        ...(selectedVariant.material === 'Framed' && { frameColor }),
       };
 
       addItem({
@@ -193,6 +196,19 @@ function StarMapEditorPage() {
                 Customize Your Star Map
               </h2>
               <StarMapControls />
+
+              {/* Frame Upsell */}
+              {product && selectedVariant && (
+                <div className="mt-6">
+                  <FrameUpsell
+                    variants={product.variants}
+                    selectedVariant={selectedVariant}
+                    basePrice={product.basePrice}
+                    onVariantChange={setSelectedVariant}
+                    onFrameColorChange={setFrameColor}
+                  />
+                </div>
+              )}
             </div>
           </div>
 

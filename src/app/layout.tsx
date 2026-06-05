@@ -3,7 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { AnnouncementBar } from "@/components/layout/announcement-bar";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { NewsletterPopup } from "@/components/newsletter/newsletter-popup";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -31,10 +33,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.className}>
       <body className="min-h-screen flex flex-col antialiased">
+        <AnnouncementBar />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
         <CartDrawer />
+        <NewsletterPopup />
         <Toaster position="top-right" richColors />
       </body>
     </html>

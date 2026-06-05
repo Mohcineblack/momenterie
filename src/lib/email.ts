@@ -2,9 +2,10 @@ import { Resend } from 'resend';
 
 let resend: Resend | null = null;
 
-function getResendClient() {
+function getResendClient(): Resend | null {
   if (!process.env.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY is not defined');
+    console.warn('[email] RESEND_API_KEY not configured — emails will be skipped');
+    return null;
   }
 
   resend ??= new Resend(process.env.RESEND_API_KEY);
@@ -27,6 +28,9 @@ export async function sendOrderConfirmation(
   }
 ) {
   try {
+    const client = getResendClient();
+    if (!client) return { success: true, skipped: true };
+
     const itemsList = orderDetails.items
       .map(item => `
         <tr>
@@ -37,7 +41,7 @@ export async function sendOrderConfirmation(
       `)
       .join('');
 
-    await getResendClient().emails.send({
+    await client.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: `Order Confirmation #${orderDetails.orderNumber}`,
@@ -117,7 +121,10 @@ export async function sendShippingNotification(
   }
 ) {
   try {
-    await getResendClient().emails.send({
+    const client = getResendClient();
+    if (!client) return { success: true, skipped: true };
+
+    await client.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: `Your order #${details.orderNumber} has shipped!`,
@@ -187,6 +194,9 @@ export async function sendOrderConfirmationEmail(data: {
   shippingAddress: any;
 }) {
   try {
+    const client = getResendClient();
+    if (!client) return { success: true, skipped: true };
+
     const itemsHtml = data.items
       .map(
         (item) => `
@@ -216,7 +226,7 @@ export async function sendOrderConfirmationEmail(data: {
       ${data.shippingAddress.country}
     `;
 
-    await getResendClient().emails.send({
+    await client.emails.send({
       from: FROM_EMAIL,
       to: data.to,
       subject: `Order Confirmation #${data.orderNumber}`,
@@ -332,7 +342,10 @@ export async function sendOrderConfirmationEmail(data: {
 
 export async function sendWelcomeEmail(email: string, name?: string) {
   try {
-    await getResendClient().emails.send({
+    const client = getResendClient();
+    if (!client) return { success: true, skipped: true };
+
+    await client.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: 'Welcome to Momenterie!',

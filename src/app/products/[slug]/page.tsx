@@ -137,6 +137,29 @@ export default async function ProductPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* JSON-LD AggregateRating */}
+      {reviews.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              name: product.name,
+              description: product.description,
+              image: product.images[0],
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: averageRating.toFixed(1),
+                reviewCount: reviews.length,
+                bestRating: "5",
+                worstRating: "1",
+              },
+            }),
+          }}
+        />
+      )}
+
       {/* Breadcrumb */}
       <div className="container mx-auto px-4 py-4">
         <Breadcrumb items={breadcrumbItems} />

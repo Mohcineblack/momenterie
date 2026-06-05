@@ -68,7 +68,7 @@ describe("prodigi-client", () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: "Bearer test-api-key-123",
+            "X-API-Key": "test-api-key-123",
           },
           body: JSON.stringify(payload),
         }
@@ -134,7 +134,7 @@ describe("prodigi-client", () => {
         {
           method: "GET",
           headers: {
-            Authorization: "Bearer test-api-key-123",
+            "X-API-Key": "test-api-key-123",
           },
         }
       );

@@ -6,6 +6,7 @@ import { CityMapEditor as CityMapEditorComponent } from "@/components/editor/cit
 import { CityMapPreview } from "@/components/editor/citymap/citymap-preview";
 import { EditorHeader } from "@/components/editor/editor-header";
 import { EditorControls } from "@/components/editor/citymap/editor-controls";
+import { FrameUpsell } from "@/components/editor/frame-upsell";
 import { useCityMapStore } from "@/store/citymap-store";
 import { toast } from "sonner";
 import { useCartStore } from "@/store/cart-store";
@@ -25,6 +26,7 @@ function CityMapEditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [product, setProduct] = useState<any>(null);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [frameColor, setFrameColor] = useState('black');
 
   useEffect(() => {
     setMounted(true);
@@ -119,8 +121,9 @@ function CityMapEditorPage() {
         showCoordinates: true,
         markers: [],
         photoUrls: [],
-        size: "30x40",
-        material: "poster",
+        size: selectedVariant.size || "30x40",
+        material: (selectedVariant.material || "poster").toLowerCase(),
+        ...(selectedVariant.material === 'Framed' && { frameColor }),
       };
 
       addItem({
@@ -178,6 +181,19 @@ function CityMapEditorPage() {
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
               <h2 className="text-xl font-bold mb-4">Customize Your Map</h2>
               <EditorControls />
+
+              {/* Frame Upsell */}
+              {product && selectedVariant && (
+                <div className="mt-6">
+                  <FrameUpsell
+                    variants={product.variants}
+                    selectedVariant={selectedVariant}
+                    basePrice={product.basePrice}
+                    onVariantChange={setSelectedVariant}
+                    onFrameColorChange={setFrameColor}
+                  />
+                </div>
+              )}
             </div>
           </div>
 

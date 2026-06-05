@@ -7,6 +7,7 @@ import {
   renderOrderItem,
   sendConfirmationEmail,
 } from "@/trigger/order-tasks";
+import { devFulfillOrder } from "@/lib/fulfillment/dev-fulfill";
 
 type WebhookReservation = "reserved" | "duplicate-unprocessed" | "processed";
 
@@ -185,14 +186,19 @@ async function handlePaymentIntentSucceeded(
       { idempotencyKey: `confirmation-email-${order.id}` }
     );
 
-    await Promise.all(
-      order.items.map((item) =>
-        renderOrderItem.trigger(
-          { orderItemId: item.id },
-          { idempotencyKey: `render-order-item-${item.id}` }
+    if (process.env.NODE_ENV === "development") {
+      console.log("[webhook] Dev mode: bypassing Trigger.dev, submitting directly to Prodigi");
+      await devFulfillOrder(order.id);
+    } else {
+      await Promise.all(
+        order.items.map((item) =>
+          renderOrderItem.trigger(
+            { orderItemId: item.id },
+            { idempotencyKey: `render-order-item-${item.id}` }
+          )
         )
-      )
-    );
+      );
+    }
   } catch (error) {
     console.error("Error handling payment_intent.succeeded:", error);
     throw error;

@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import type { NextRequest } from "next/server";
 
+// Test assumes standard VAT mode for price verification
+beforeAll(() => { process.env.NEXT_PUBLIC_VAT_MODE = "standard"; });
+afterAll(() => { delete process.env.NEXT_PUBLIC_VAT_MODE; });
+
 jest.mock("@/lib/auth", () => ({ auth: jest.fn().mockResolvedValue(null) }));
 jest.mock("@/lib/stripe", () => ({
   stripe: {

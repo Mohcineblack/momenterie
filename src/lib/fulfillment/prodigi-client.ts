@@ -117,7 +117,7 @@ export async function submitOrder(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      "X-API-Key": apiKey,
     },
     body: JSON.stringify(payload),
   });
@@ -146,7 +146,7 @@ export async function getOrder(
   const response = await fetch(`${base}/v4.0/Orders/${prodigiOrderId}`, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      "X-API-Key": apiKey,
     },
   });
 

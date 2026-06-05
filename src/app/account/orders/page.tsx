@@ -53,15 +53,11 @@ export default async function OrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
-          <p className="text-gray-600">
-            Track and manage your orders
-          </p>
-        </div>
+    <div>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Mes commandes</h1>
+      </div>
 
         {orders.length === 0 ? (
           /* Empty State */
@@ -167,7 +163,6 @@ export default async function OrdersPage() {
             })}
           </div>
         )}
-      </div>
     </div>
   );
 }

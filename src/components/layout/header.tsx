@@ -16,8 +16,7 @@ export function Header() {
   const navigation = [
     { name: 'City Maps', href: '/collections/city-maps' },
     { name: 'Star Maps', href: '/collections/star-maps' },
-    { name: 'Puzzles', href: '/collections/puzzles' },
-    { name: 'Jewelry', href: '/collections/jewelry' },
+    { name: 'Idées cadeaux', href: '/occasions' },
     { name: 'All Products', href: '/collections/all' },
   ];
 

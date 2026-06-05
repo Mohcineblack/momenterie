@@ -1,9 +1,10 @@
 'use client';
 
 import { useCartStore } from '@/store/cart-store';
-import { X, ShoppingBag } from 'lucide-react';
+import { X, ShoppingBag, Truck } from 'lucide-react';
 import { CartItem } from './cart-item';
 import { formatPrice } from '@/lib/utils';
+import { FREE_SHIPPING_THRESHOLD_CENTS } from '@/lib/shipping-config';
 import Link from 'next/link';
 import { useEffect } from 'react';
 
@@ -87,6 +88,19 @@ export function CartDrawer() {
         {/* Footer */}
         {items.length > 0 && (
           <div className="border-t p-6 space-y-4">
+            {/* Free shipping progress */}
+            {totalPrice < FREE_SHIPPING_THRESHOLD_CENTS ? (
+              <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
+                <Truck className="w-4 h-4 flex-shrink-0" />
+                <span>Plus que {formatPrice(FREE_SHIPPING_THRESHOLD_CENTS - totalPrice)} pour la livraison gratuite</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg px-3 py-2">
+                <Truck className="w-4 h-4 flex-shrink-0" />
+                <span>Livraison gratuite !</span>
+              </div>
+            )}
+
             {/* Subtotal */}
             <div className="flex items-center justify-between text-lg font-semibold">
               <span>Subtotal</span>
