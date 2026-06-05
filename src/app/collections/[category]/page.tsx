@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
 import { Star } from "lucide-react";
-import { ProductImagePlaceholder } from "@/components/ui/product-image-placeholder";
+import { ProductImage } from "@/components/ui/product-image-placeholder";
 
 interface PageProps {
   params: Promise<{ category: string }>;
@@ -128,17 +128,12 @@ export default async function CollectionPage({ params, searchParams }: PageProps
             <Link key={product.id} href={`/products/${product.slug}`} className="group flex flex-col items-center">
               <div className="aspect-[4/5] w-full bg-surface-container overflow-hidden relative mb-6 border border-outline-variant p-2 flex flex-col">
                 <div className="flex-1 bg-surface-dim overflow-hidden relative">
-                  {product.images[0] ? (
-                    <Image
-                      src={product.images[0]}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                      className="object-cover object-center group-hover:scale-[1.02] transition-transform duration-700 ease-out"
-                    />
-                  ) : (
-                    <ProductImagePlaceholder />
-                  )}
+                  <ProductImage
+                    src={product.images[0]}
+                    alt={product.name}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    className="object-cover object-center group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+                  />
                   {product.featured && (
                     <div className="absolute top-4 left-4 bg-surface/90 backdrop-blur px-3 py-1 font-sans text-[10px] font-bold uppercase tracking-wider text-primary border border-outline-variant">
                       Featured

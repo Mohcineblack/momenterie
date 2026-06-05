@@ -1,3 +1,8 @@
+'use client';
+
+import Image from 'next/image';
+import { useState } from 'react';
+
 export function ProductImagePlaceholder({ className = '' }: { className?: string }) {
   return (
     <div className={`w-full h-full bg-surface-container flex items-center justify-center ${className}`}>
@@ -8,5 +13,34 @@ export function ProductImagePlaceholder({ className = '' }: { className?: string
         <span className="font-sans text-[9px] uppercase tracking-[0.2em] font-medium">No image</span>
       </div>
     </div>
+  );
+}
+
+interface ProductImageProps {
+  src: string | undefined | null;
+  alt: string;
+  fill?: boolean;
+  sizes?: string;
+  priority?: boolean;
+  className?: string;
+}
+
+export function ProductImage({ src, alt, fill = true, sizes, priority, className = '' }: ProductImageProps) {
+  const [error, setError] = useState(false);
+
+  if (!src || error) {
+    return <ProductImagePlaceholder />;
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill={fill}
+      sizes={sizes}
+      priority={priority}
+      className={className}
+      onError={() => setError(true)}
+    />
   );
 }
