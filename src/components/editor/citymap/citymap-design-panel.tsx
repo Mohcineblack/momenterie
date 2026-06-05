@@ -10,7 +10,7 @@ import {
   rgbToHex,
   EShapeOverlay,
 } from "@/lib/citymap/citymap-model";
-import { DESIGN_PRESETS, HEADLINE_SUGGESTIONS } from "@/lib/citymap/citymap-presets";
+import { CITYMAP_DESIGNS, DESIGNS_BY_CATEGORY, HEADLINE_SUGGESTIONS } from "@/lib/citymap/citymap-presets";
 
 const sectionLabel = "font-sans text-[10px] uppercase tracking-[0.15em] font-bold text-primary";
 const CATEGORIES = Object.values(EDesignCategory);
@@ -20,10 +20,11 @@ export function DesignPanel() {
   const setHeadline = useCitymapEditor((s) => s.setHeadline);
   const mapStyle = useCitymapEditor((s) => s.mapStyle);
   const textLayout = useCitymapEditor((s) => s.textLayout);
+  const shapeOverlay = useCitymapEditor((s) => s.shapeOverlay);
 
   const [category, setCategory] = useState<EDesignCategory>(EDesignCategory.BESTSELLER);
 
-  const presets = DESIGN_PRESETS[category];
+  const designIds = DESIGNS_BY_CATEGORY[category];
   const suggestions = HEADLINE_SUGGESTIONS[category];
 
   return (
@@ -45,29 +46,35 @@ export function DesignPanel() {
       {/* Design presets */}
       <div>
         <p className={sectionLabel}>Designs</p>
-        <div className="grid grid-cols-3 gap-2 mt-3">
-          {presets.map((p) => {
+        <div className="grid grid-cols-4 gap-2 mt-3">
+          {designIds.map((id) => {
+            const p = CITYMAP_DESIGNS[id];
             const def = getMapStyleDef(p.mapStyle);
-            const active = mapStyle === p.mapStyle && textLayout === p.textLayout;
+            const active = mapStyle === p.mapStyle && textLayout === p.textLayout && shapeOverlay === p.shapeOverlay;
             return (
               <button
-                key={p.id}
-                onClick={() => applyDesign({ mapStyle: p.mapStyle, textLayout: p.textLayout, textVariant: p.textVariant, shapeOverlay: p.shapeOverlay })}
+                key={id}
+                onClick={() => applyDesign({
+                  mapStyle: p.mapStyle,
+                  posterPadding: p.posterPadding,
+                  gradientOverlay: p.gradientOverlay,
+                  shapeOverlay: p.shapeOverlay,
+                  showOutline: p.showOutline,
+                  textLayout: p.textLayout,
+                  textVariant: p.textVariant,
+                })}
+                title={p.name}
                 className={`relative border-2 transition-colors ${active ? "border-primary" : "border-outline-variant hover:border-on-surface-variant"}`}
               >
-                <div className="aspect-[4/5] flex flex-col" style={{ backgroundColor: rgbToHex(def.theme.base) }}>
-                  <div className="flex-1 flex items-center justify-center">
-                    {p.shapeOverlay === EShapeOverlay.HEART ? (
-                      <span style={{ color: rgbToHex(def.theme.accent), fontSize: 22 }}>♥</span>
-                    ) : p.shapeOverlay === EShapeOverlay.CIRCLE ? (
-                      <span className="w-7 h-7 rounded-full border-2" style={{ borderColor: rgbToHex(def.theme.accent) }} />
-                    ) : (
-                      <span className="w-8 h-1 rounded" style={{ backgroundColor: rgbToHex(def.theme.accent) }} />
-                    )}
-                  </div>
-                  <div className="h-1/4 flex items-center justify-center" style={{ backgroundColor: rgbToHex(def.theme.base) }}>
-                    <span className="w-1/2 h-1 rounded" style={{ backgroundColor: rgbToHex(def.theme.accent), opacity: 0.7 }} />
-                  </div>
+                <div className="aspect-[4/5] flex flex-col items-center justify-center" style={{ backgroundColor: rgbToHex(def.theme.base) }}>
+                  {p.shapeOverlay === EShapeOverlay.HEART ? (
+                    <span style={{ color: rgbToHex(def.theme.accent), fontSize: 18 }}>♥</span>
+                  ) : p.shapeOverlay === EShapeOverlay.CIRCLE ? (
+                    <span className="w-6 h-6 rounded-full border-2" style={{ borderColor: rgbToHex(def.theme.accent) }} />
+                  ) : (
+                    <span className="w-7 h-0.5 rounded" style={{ backgroundColor: rgbToHex(def.theme.accent) }} />
+                  )}
+                  <span className="mt-1 text-[7px] font-bold uppercase tracking-wider" style={{ color: rgbToHex(def.theme.accent), opacity: 0.7 }}>{p.name}</span>
                 </div>
               </button>
             );

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { useCitymapEditor } from "@/store/citymap-editor-store";
 import {
   EShapeOverlay,
@@ -13,6 +13,7 @@ import {
   getMapStyleDef,
   rgbToHex,
 } from "@/lib/citymap/citymap-model";
+import { buildMapStyle } from "@/lib/citymap/map-style";
 import { markerDivHtml } from "@/lib/citymap/marker-render";
 import {
   SHAPE_HEART_PATH,
@@ -21,31 +22,10 @@ import {
   SHAPE_CIRCLE_VIEWBOX,
 } from "@/lib/citymap/marker-icons";
 
-const TILES = {
-  light: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
-  dark: "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png",
-};
-
-/** Tile CSS filter that gently tints toward the style's accent hue. */
-function tileFilter(accentRgb: string, dark: boolean): string {
-  const [r, g, b] = accentRgb.split(",").map((n) => parseInt(n.trim(), 10));
-  // grayscale-ish accent (near neutral) → minimal tint
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  const sat = max === 0 ? 0 : (max - min) / max;
-  if (sat < 0.15) {
-    return dark ? "saturate(0.6)" : "saturate(0.85) brightness(1.02)";
-  }
-  const hue = Math.round((Math.atan2(Math.sqrt(3) * (g - b), 2 * r - g - b) * 180) / Math.PI);
-  return dark
-    ? `saturate(1.1) hue-rotate(${hue}deg) brightness(0.95)`
-    : `saturate(1.05) hue-rotate(${hue}deg)`;
-}
-
 export function CitymapMap() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const tileRef = useRef<L.TileLayer | null>(null);
-  const markerLayerRef = useRef<L.LayerGroup | null>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const markerObjs = useRef<maplibregl.Marker[]>([]);
 
   const location = useCitymapEditor((s) => s.location);
   const zoom = useCitymapEditor((s) => s.zoom);
@@ -63,27 +43,25 @@ export function CitymapMap() {
   // init
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = L.map(containerRef.current, {
-      center: [location?.lat ?? 48.8566, location?.lng ?? 2.3522],
-      zoom: zoom,
-      zoomControl: false,
-      attributionControl: false,
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: buildMapStyle(mapStyle),
+      center: [location?.lng ?? 2.3522, location?.lat ?? 48.8566],
+      zoom,
+      attributionControl: { compact: true },
+      dragRotate: false,
+      pitchWithRotate: false,
     });
-    const tile = L.tileLayer(styleDef.dark ? TILES.dark : TILES.light, { maxZoom: 19 }).addTo(map);
-    const group = L.layerGroup().addTo(map);
-    tileRef.current = tile;
-    markerLayerRef.current = group;
     mapRef.current = map;
 
-    map.on("zoomend", () => setZoom(map.getZoom()));
+    map.on("zoomend", () => setZoom(Math.round(map.getZoom())));
     map.on("moveend", () => {
       const c = map.getCenter();
       const cur = useCitymapEditor.getState().location;
       setLocation({ lat: c.lat, lng: c.lng, placeName: cur?.placeName ?? "" });
     });
+    map.on("load", () => renderMarkers());
 
-    applyTint();
-    renderMarkers();
     return () => {
       map.remove();
       mapRef.current = null;
@@ -91,11 +69,10 @@ export function CitymapMap() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // tiles + tint on style change
+  // restyle on theme change (preserves camera)
   useEffect(() => {
-    if (!mapRef.current || !tileRef.current) return;
-    tileRef.current.setUrl(styleDef.dark ? TILES.dark : TILES.light);
-    applyTint();
+    if (!mapRef.current) return;
+    mapRef.current.setStyle(buildMapStyle(mapStyle));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapStyle]);
 
@@ -104,7 +81,7 @@ export function CitymapMap() {
     if (!location || !mapRef.current) return;
     const c = mapRef.current.getCenter();
     if (Math.abs(c.lat - location.lat) > 1e-6 || Math.abs(c.lng - location.lng) > 1e-6) {
-      mapRef.current.setView([location.lat, location.lng], zoom, { animate: true });
+      mapRef.current.flyTo({ center: [location.lng, location.lat], zoom, duration: 800 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location?.lat, location?.lng]);
@@ -113,7 +90,7 @@ export function CitymapMap() {
   useEffect(() => {
     if (!mapRef.current) return;
     if (Math.round(mapRef.current.getZoom()) !== Math.round(zoom)) {
-      mapRef.current.setZoom(zoom, { animate: true });
+      mapRef.current.easeTo({ zoom, duration: 300 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoom]);
@@ -124,50 +101,37 @@ export function CitymapMap() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markers]);
 
-  function applyTint() {
-    const pane = containerRef.current?.querySelector(".leaflet-tile-pane") as HTMLElement | null;
-    if (pane) pane.style.filter = tileFilter(styleDef.theme.accent, styleDef.dark);
-  }
-
   function renderMarkers() {
-    const group = markerLayerRef.current;
     const map = mapRef.current;
-    if (!group || !map) return;
-    group.clearLayers();
+    if (!map) return;
+    markerObjs.current.forEach((m) => m.remove());
+    markerObjs.current = [];
 
     for (const m of markers) {
-      let leafletMarker: L.Marker;
+      const el = document.createElement("div");
+      let anchor: maplibregl.PositionAnchor = "bottom";
+
       if (m.type === EMarkerType.PHOTO && m.photoUrl) {
         const [w] = MARKER_SIZE[m.size].size;
         const px = Math.max(w, 40);
-        const ring = "#" + (m.color.startsWith("#") ? m.color.slice(1) : m.color);
-        const html = `<div class="citymap-marker citymap-marker--photo" style="width:${px}px;height:${px}px;border-color:${ring}"><img src="${m.photoUrl}" alt="" /></div>`;
-        const icon = L.divIcon({
-          className: "citymap-divicon",
-          html,
-          iconSize: [px, px],
-          iconAnchor: [px / 2, px / 2],
-        });
-        leafletMarker = L.marker([m.lat, m.lng], { icon, draggable: true });
+        const ring = "#" + m.color.replace("#", "");
+        el.innerHTML = `<div class="citymap-marker citymap-marker--photo" style="width:${px}px;height:${px}px;border-color:${ring}"><img src="${m.photoUrl}" alt="" /></div>`;
+        anchor = "center";
       } else {
-        const html = markerDivHtml(m.icon, m.size, m.color, m.colorLayer, m.text || undefined);
-        const [w, h] = MARKER_SIZE[m.size].size;
-        const [ax, ay] = MARKER_SIZE[m.size].anchor;
-        const icon = L.divIcon({
-          className: "citymap-divicon",
-          html,
-          iconSize: [w, h],
-          iconAnchor: [ax, ay],
-        });
-        leafletMarker = L.marker([m.lat, m.lng], { icon, draggable: true });
+        el.innerHTML = markerDivHtml(m.icon, m.size, m.color, m.colorLayer, m.text || undefined);
+        anchor = "bottom";
       }
 
-      leafletMarker.on("click", () => selectMarker(m.id));
-      leafletMarker.on("dragend", () => {
-        const ll = leafletMarker.getLatLng();
+      const marker = new maplibregl.Marker({ element: el, anchor, draggable: true })
+        .setLngLat([m.lng, m.lat])
+        .addTo(map);
+
+      el.addEventListener("click", () => selectMarker(m.id));
+      marker.on("dragend", () => {
+        const ll = marker.getLngLat();
         updateMarker(m.id, { lat: ll.lat, lng: ll.lng });
       });
-      leafletMarker.addTo(group);
+      markerObjs.current.push(marker);
     }
   }
 
@@ -176,16 +140,11 @@ export function CitymapMap() {
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      {/* SVG clip-path defs for shape masks */}
       {showShape && (
         <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
           <defs>
             <clipPath id="cm-heart-clip" clipPathUnits="objectBoundingBox">
-              {/* normalized heart path (488x417 → 0..1) */}
-              <path
-                transform="scale(0.0020491803 0.0023980815)"
-                d={SHAPE_HEART_PATH}
-              />
+              <path transform="scale(0.0020491803 0.0023980815)" d={SHAPE_HEART_PATH} />
             </clipPath>
             <clipPath id="cm-circle-clip" clipPathUnits="objectBoundingBox">
               <circle cx="0.5" cy="0.5" r="0.46" />
@@ -200,7 +159,7 @@ export function CitymapMap() {
         style={showShape ? { clipPath: `url(#${clipId})` } : undefined}
       />
 
-      {/* gradient overlay — exact CSS from the source (color via --cm-gradient-color) */}
+      {/* gradient overlay — exact CSS from the source */}
       {gradientOverlay !== EGradientOverlay.NONE && (
         <div
           className={`citymap-gradient gradient--${gradientOverlay}`}
@@ -218,15 +177,7 @@ export function CitymapMap() {
           {shapeOverlay === EShapeOverlay.HEART ? (
             <path d={SHAPE_HEART_PATH} fill="none" stroke={rgbToHex(styleDef.theme.accent)} strokeWidth="3" vectorEffect="non-scaling-stroke" />
           ) : (
-            <circle
-              cx={SHAPE_CIRCLE.cx}
-              cy={SHAPE_CIRCLE.cy}
-              r={SHAPE_CIRCLE.r}
-              fill="none"
-              stroke={rgbToHex(styleDef.theme.accent)}
-              strokeWidth="3"
-              vectorEffect="non-scaling-stroke"
-            />
+            <circle cx={SHAPE_CIRCLE.cx} cy={SHAPE_CIRCLE.cy} r={SHAPE_CIRCLE.r} fill="none" stroke={rgbToHex(styleDef.theme.accent)} strokeWidth="3" vectorEffect="non-scaling-stroke" />
           )}
         </svg>
       )}

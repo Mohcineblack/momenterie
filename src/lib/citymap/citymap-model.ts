@@ -278,25 +278,28 @@ export const FRAME_COLOR_HEX: Record<EFrameColor, string> = {
 export enum EDesignCategory {
   BESTSELLER = "BESTSELLER",
   HEART = "HEART",
-  FAMILY = "FAMILY",
-  TRAVEL = "TRAVEL",
-  HOME = "HOME",
+  DARK = "DARK",
+  MINIMALISTIC = "MINIMALISTIC",
+  TEXT = "TEXT",
+  HANDWRITING = "HANDWRITING",
 }
 
 export const DESIGN_CATEGORY_EMOJI: Record<EDesignCategory, string> = {
   [EDesignCategory.BESTSELLER]: "⭐",
   [EDesignCategory.HEART]: "🩷",
-  [EDesignCategory.FAMILY]: "👨‍👩‍👧",
-  [EDesignCategory.TRAVEL]: "✈️",
-  [EDesignCategory.HOME]: "🏠",
+  [EDesignCategory.DARK]: "🌚",
+  [EDesignCategory.MINIMALISTIC]: "☁️",
+  [EDesignCategory.TEXT]: "💬",
+  [EDesignCategory.HANDWRITING]: "✍️",
 };
 
 export const DESIGN_CATEGORY_LABEL: Record<EDesignCategory, string> = {
   [EDesignCategory.BESTSELLER]: "Populaire",
   [EDesignCategory.HEART]: "Amour",
-  [EDesignCategory.FAMILY]: "Famille",
-  [EDesignCategory.TRAVEL]: "Voyage",
-  [EDesignCategory.HOME]: "Maison",
+  [EDesignCategory.DARK]: "Sombre",
+  [EDesignCategory.MINIMALISTIC]: "Minimaliste",
+  [EDesignCategory.TEXT]: "Avec texte",
+  [EDesignCategory.HANDWRITING]: "Manuscrit",
 };
 
 /* ------------------------------------------------------------------ */
