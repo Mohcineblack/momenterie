@@ -88,23 +88,36 @@ function CityMapEditorPage() {
         <div className="w-5" />
       </div>
 
-      {/* Left: Preview — the rendered map artwork */}
-      <div className="flex-1 flex flex-col bg-surface-container-lowest overflow-hidden">
-        <div className="hidden md:flex items-center p-4">
+      {/* Left: The poster frame with the map INSIDE it */}
+      <div className="flex-1 flex flex-col items-center justify-start bg-surface-container-lowest p-6 md:p-12 overflow-y-auto">
+        <div className="hidden md:flex items-center self-start mb-6">
           <Link href={`/products/${productSlug || "custom-city-map"}`} className="flex items-center gap-2 text-on-surface-variant hover:text-primary text-sm font-sans tracking-wide">
             <ArrowLeft className="w-4 h-4" /> Back to Product
           </Link>
         </div>
 
-        {/* Map (interactive, for positioning) */}
-        <div className="relative w-full" style={{ height: "50vh" }}>
-          <CityMapEditorComponent />
-        </div>
+        {/* The poster frame — map is rendered inside */}
+        <div className="w-full max-w-[480px] border border-outline-variant shadow-2xl bg-white">
+          {/* Map area (interactive — user drags to position) */}
+          <div className="relative w-full" style={{ aspectRatio: "1/1" }}>
+            <CityMapEditorComponent />
+          </div>
 
-        {/* Rendered preview (the actual poster artwork) */}
-        <div className="flex-1 flex items-center justify-center p-8 bg-surface">
-          <div className="w-full max-w-[360px]">
-            <CityMapPreview />
+          {/* Text area below the map (title, subtitle, coordinates) */}
+          <div className="px-6 py-8 text-center bg-white border-t border-outline-variant">
+            <h2 className="font-serif text-2xl md:text-3xl font-bold text-primary uppercase tracking-widest mb-1">
+              {title || location?.placeName || "YOUR TITLE"}
+            </h2>
+            {(subtitle || date) && (
+              <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">
+                {subtitle || date}
+              </p>
+            )}
+            {location && (
+              <p className="font-mono text-[9px] text-on-surface-variant mt-2 tracking-wider opacity-60">
+                {Math.abs(location.lat).toFixed(4)}° {location.lat >= 0 ? "N" : "S"} · {Math.abs(location.lng).toFixed(4)}° {location.lng >= 0 ? "E" : "W"}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -116,12 +129,10 @@ function CityMapEditorPage() {
           <p className="font-sans text-sm text-on-surface-variant">Customize location, text, and style.</p>
         </div>
 
-        {/* All controls in a scrollable area */}
+        {/* All controls */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
-          {/* Location + Text + Style controls */}
           <EditorControls />
 
-          {/* Frame upsell */}
           {product && selectedVariant && (
             <div className="pt-6 border-t border-outline-variant">
               <FrameUpsell
